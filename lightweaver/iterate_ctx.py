@@ -162,11 +162,11 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         The final IterationUpdates computed, if requested by `returnFinalConvergence`.
     '''
 
-    if loggingDetail is 'basic':
+    if loggingDetail == 'basic':
         formatter = logging.Formatter('%(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         logger.addHandler(ch)
-    elif loggingDetail is not 'all' or 'basic':
+    elif loggingDetail != 'all' or 'basic':
         try:
             formatter = logging.Formatter(loggingDetail)
             ch.setFormatter(formatter)
