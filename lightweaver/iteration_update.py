@@ -131,4 +131,5 @@ class IterationUpdate:
             dRhoMax = self.dRhoMax
             chunks.append(f'    PRD dRho = {dRhoMax:.2e}, (sub-iterations: {iterCount})')
 
-        return '\n'.join(chunks)
+        # return '\n'.join(chunks)
+        return ''.join(chunks)
