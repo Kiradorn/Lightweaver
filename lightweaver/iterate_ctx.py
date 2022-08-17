@@ -252,6 +252,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
             finalConvergence = [JUpdate, popsUpdate]
             if prd and dRhoUpdate is not None:
                 finalConvergence.append(dRhoUpdate)
+
             return it, finalConvergence
         else:
             return it
