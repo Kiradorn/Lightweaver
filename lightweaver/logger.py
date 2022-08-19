@@ -81,19 +81,19 @@ class MPIFileHandler(logging.FileHandler):
 def buildLogger(NameAtCall, MPI=False):
     logger = logging.getLogger(NameAtCall)
     if not logger.handlers:
-	    logger.setLevel(logging.DEBUG)
-	    if MPI:
-            ch = MPIFileHandler("MPI_logfile.log") 
+        logger.setLevel(logging.DEBUG)
+        if MPI:
+            ch = MPIFileHandler("MPI_logfile.log")
         else:
             ch = logging.StreamHandler()
-    	
+
         ch.setLevel(logging.DEBUG)    
         ch.setFormatter(CustomFormatter())
-	    logger.addHandler(ch)
+        logger.addHandler(ch)
     return logger
 
 def closeLogger(logger):
-	handlers = logger.handlers[:]
-	for handler in handlers:
-	    logger.removeHandler(handler)
-	    handler.close()
+    handlers = logger.handlers[:]
+    for handler in handlers:
+        logger.removeHandler(handler)
+        handler.close()
