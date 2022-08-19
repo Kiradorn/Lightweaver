@@ -45,9 +45,7 @@ class MPIFileHandler(logging.FileHandler):
         self.mode = mode                                                        
         self.encoding = encoding                                            
         self.comm = comm                                                        
-        if delay:                                                               
-            #We don't open the stream, but we still need to call the            
-            #Handler constructor to set level, formatter, lock etc.             
+        if delay:                                                                      
             logging.Handler.__init__(self)                                      
             self.stream = None                                                  
         else:                                                                   
@@ -76,23 +74,30 @@ class MPIFileHandler(logging.FileHandler):
         """
         try:
             msg = self.format(record)
-            stream = self.stream
-            stream.Write_shared((msg+self.terminator).encode(self.encoding))
-            #self.flush()
+            b = bytearray()
+            b.extend(map(ord, msg))
+            self.stream.Write_shared(b)
+            
+            # stream = self.stream
+            # # stream.Write_shared((msg+self.terminator).encode(self.encoding))
+            # stream.Write_shared(msg+'\n')
+            # #self.flush()
         except Exception:
             self.handleError(record)        
 
 def buildLogger(NameAtCall, loggerMPI = False):
     if loggerMPI:
-        comm=MPI.COMM_WORLD
-        logger = logging.getLogger("rank[%i]"%comm.rank + NameAtCall)
+        # comm=MPI.COMM_WORLD
+        # logger = logging.getLogger("rank[%i]"%comm.rank + NameAtCall)
+        logger = logging.getLogger(NameAtCall)
     else:
         logger = logging.getLogger(NameAtCall)
     
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
         if loggerMPI:
-            ch = MPIFileHandler("rank[%i]"%comm.rank + "_MPI_logfile.log")
+            # ch = MPIFileHandler("rank[%i]"%comm.rank + "_MPI_logfile.log")
+            ch = MPIFileHandler("MPI_logfile.log")
         else:
             ch = logging.StreamHandler()
 
