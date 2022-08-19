@@ -91,7 +91,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                    prd: bool=False, JTol: float=5e-3, popsTol: float=1e-3,
                    rhoTol: Optional[float]=None, prdIterTol: float=1e-2,
                    maxPrdSubIter: int=3, printInterval: float=0.2,
-                   quiet: bool=False, loggerLevel: float=30,
+                   quiet: bool=False, loggerLevel: float=30, loggerMPI: bool=False,
                    convergence: Optional[Type[ConvergenceCriteria]]=None,
                    returnFinalConvergence: bool=False):
     '''
@@ -153,7 +153,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         The final IterationUpdates computed, if requested by `returnFinalConvergence`.
     '''
 
-    logger = lwLog.buildLogger(__name__, MPI=True)
+    logger = lwLog.buildLogger(__name__, MPI=loggerMPI)
     logger.setLevel(loggerLevel)
 
     prevPrint = 0.0
