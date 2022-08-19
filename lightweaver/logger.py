@@ -82,8 +82,8 @@ class MPIFileHandler(logging.FileHandler):
         except Exception:
             self.handleError(record)        
 
-def buildLogger(NameAtCall, MPI = False):
-    if MPI:
+def buildLogger(NameAtCall, loggerMPI = False):
+    if loggerMPI:
         comm=MPI.COMM_WORLD
         logger = logging.getLogger("rank[%i]"%comm.rank + NameAtCall)
     else:
@@ -91,7 +91,7 @@ def buildLogger(NameAtCall, MPI = False):
     
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
-        if MPI:
+        if loggerMPI:
             ch = MPIFileHandler("rank[%i]"%comm.rank + "_MPI_logfile.log")
         else:
             ch = logging.StreamHandler()
