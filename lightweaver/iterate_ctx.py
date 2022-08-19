@@ -153,7 +153,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         The final IterationUpdates computed, if requested by `returnFinalConvergence`.
     '''
 
-    logger = lwLog.buildLogger(__name__)
+    logger = lwLog.buildLogger(__name__, MPI=True)
     logger.setLevel(loggerLevel)
 
     prevPrint = 0.0
