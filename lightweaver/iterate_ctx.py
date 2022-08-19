@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING, Optional, Type
 
 from .iteration_update import IterationUpdate
 
-import lightweaver.logger as lwLog
+import logging
+log  = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from . import Context
@@ -61,7 +62,7 @@ class DefaultConvergenceCriteria(ConvergenceCriteria):
     '''
 
     def __init__(self, ctx: 'Context', JTol: float, popsTol: float, rhoTol: Optional[float]):
-        # self.logger = lwLog.buildLogger(self.__name__)
+        # self.log = lwLog.buildlog(self.__name__)
         self.ctx = ctx
         self.JTol = JTol
         self.popsTol = popsTol
@@ -91,7 +92,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                    prd: bool=False, JTol: float=5e-3, popsTol: float=1e-3,
                    rhoTol: Optional[float]=None, prdIterTol: float=1e-2,
                    maxPrdSubIter: int=3, printInterval: float=0.2,
-                   quiet: bool=False, loggerLevel: float=30, loggerMPI: bool=False,
+                   quiet: bool=False,
                    convergence: Optional[Type[ConvergenceCriteria]]=None,
                    returnFinalConvergence: bool=False):
     '''
@@ -133,9 +134,6 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     quiet : bool, optional
         Overrides any other print arguments and iterates silently if True.
         (Default: False).
-    loggerLevel : float, optional
-        Indicates which level of logging to set (beta)
-        (Default: 30 -> WARNING)
     convergence : derived ConvergenceCriteria class, optional
         The ConvergenceCriteria version to be used in determining convergence.
         Will be instantiated by this function, and the `is_converged` method
@@ -152,9 +150,6 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     finalIterationUpdates : List[IterationUpdate], optional
         The final IterationUpdates computed, if requested by `returnFinalConvergence`.
     '''
-
-    logger = lwLog.buildLogger(__name__, loggerMPI=loggerMPI)
-    logger.setLevel(loggerLevel)
 
     prevPrint = 0.0
     printNow = True
@@ -177,7 +172,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
 
         if it < Nscatter:
             if printNow:
-                logger.info('\n'+'    (Lambda iterating background)')
+                log.info('\n'+'    (Lambda iterating background)')
             # NOTE(cmo): reset print state
             printNow = False
             continue
@@ -197,7 +192,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
             StringToLog+='\n' + popsUpdate.compact_representation()
             if dRhoUpdate is not None:
                 StringToLog+='\n' + dRhoUpdate.compact_representation()
-            logger.info('\n' + StringToLog)
+            log.info('\n' + StringToLog)
 
         terminate = conv.is_converged(JUpdate, popsUpdate, dRhoUpdate)
 
@@ -206,7 +201,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
             duration = endTime - startTime
             line = '-' * 80
             if printNow:
-                logger.info('Final Iteration shown above.')
+                log.info('Final Iteration shown above.')
             else:
                 StringToLog = line 
                 StringToLog += '\n' + f'Final Iteration: {it}'
@@ -218,7 +213,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
             StringToLog += '\n' + line
             StringToLog += '\n' + f'Context converged to statistical equilibrium in {it}' + f' iterations after {duration:.2f} s.'
             StringToLog +='\n' + line
-            logger.info('\n' + StringToLog)
+            log.info('\n' + StringToLog)
 
             if returnFinalConvergence:
                 finalConvergence = [JUpdate, popsUpdate]
@@ -235,7 +230,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         duration = endTime - startTime
         line = '-' * 80
         if printNow:
-            logger.info('Final Iteration shown above.')
+            log.info('Final Iteration shown above.')
         else:
             StringToLog = line 
             StringToLog += '\n' + f'Final Iteration: {it}'
@@ -247,7 +242,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         StringToLog += '\n' + line
         StringToLog += '\n' + f'Context converged to statistical equilibrium in {it}' + f' iterations after {duration:.2f} s.'
         StringToLog +='\n' + line
-        logger.info('\n' + StringToLog)
+        log.info('\n' + StringToLog)
 
         if returnFinalConvergence:
             finalConvergence = [JUpdate, popsUpdate]
