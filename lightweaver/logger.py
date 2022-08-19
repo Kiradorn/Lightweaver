@@ -1,5 +1,9 @@
 import logging
 
+from mpi4py import MPI
+
+from os.path import abspath
+
 class CustomFormatter(logging.Formatter):
     """Logging Formatter to add colors and count warning / errors"""
 
