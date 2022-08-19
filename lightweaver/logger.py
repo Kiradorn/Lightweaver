@@ -106,7 +106,8 @@ class MPIHandler(logging.FileHandler):
 def buildLogger(
     level: int,
     log_path: Optional["Path"] = None,
-    mpi_log: Optional[bool] = False
+    mpi_log: Optional[bool] = False,
+    root_only: Optional[bool] = True
 ):
 
     
@@ -127,7 +128,11 @@ def buildLogger(
     ch.setFormatter(CustomFormatter())
     ch.setLevel(level)
 
-    logger.addHandler(ch)
+    if root_only:
+        if MPI.COMM_WORLD.Get_rank() == 0.:
+            logger.addHandler(ch)
+    else:
+        logger.addHandler(ch)
 
     if log_path:
         
@@ -141,8 +146,14 @@ def buildLogger(
             fh.setFormatter(CustomFormatter())
 
         if fh:
-            fh.setLevel(level)
-            logger.addHandler(fh)
+            if root_only:
+                if MPI.COMM_WORLD.Get_rank() == 0.:
+                    fh.setLevel(level)
+                    logger.addHandler(fh)
+            else:
+                fh.setLevel(level)
+                logger.addHandler(fh)
+            
 
 
 def closeLogger(logger):
