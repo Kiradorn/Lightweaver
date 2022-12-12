@@ -1395,8 +1395,11 @@ class Atmosphere:
                     x = mid + halfWidth * x
                     w *= halfWidth
 
-                    self.muz = np.ascontiguousarray(np.tile(np.tile(x,2),(2,1)).T*[-1,1])
-                    self.wmu = np.ascontiguousarray(np.tile(np.tile(w,2),(2,1)).T)
+                    self.muz = np.ascontiguousarray(np.array([-x,x]).T)
+                    self.wmu = np.ascontiguousarray(np.array([w,w]).T)
+                    
+                    # self.muz = np.ascontiguousarray(np.tile(np.tile(x,2),(2,1)).T*[-1,1])
+                    # self.wmu = np.ascontiguousarray(np.tile(np.tile(w,2),(2,1)).T)
                 else:
                     raise ValueError('Unsupported Nrays=%d' % Nrays)
             elif Nrays is not None and mu is not None:
@@ -1412,8 +1415,8 @@ class Atmosphere:
 
             self.muy = np.zeros_like(self.muz)
             self.mux = np.sqrt(1.0 - self.muz**2)
-            self.mux[self.Nrays // 2:,:] *= -1
-            self.mux[:,1] *= -1
+            # self.mux[self.Nrays // 2:,:] *= -1
+            self.mux[:,0] *= -1
         else:
             with open(get_data_path() + 'Quadratures.pickle', 'rb') as pkl:
                 quads = pickle.load(pkl)
