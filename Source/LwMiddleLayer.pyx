@@ -866,10 +866,10 @@ cdef class LwAtmosphere:
             state['sin2chi'] = None
         state['vturb'] = self.pyAtmos.vturb
         state['nHTot'] = self.pyAtmos.nHTot
-        state['muz'] = self.pyAtmos.muz
-        state['muy'] = self.pyAtmos.muy
-        state['mux'] = self.pyAtmos.mux
-        state['wmu'] = self.pyAtmos.wmu
+        state['muz'] = np.asarray(self.pyAtmos.muz)
+        state['muy'] = np.asarray(self.pyAtmos.muy)
+        state['mux'] = np.asarray(self.pyAtmos.mux)
+        state['wmu'] = np.asarray(self.pyAtmos.wmu)
         state['Nwave'] = self.Nwave
         state['Ndim'] = self.Ndim
         state['Nx'] = self.Nx
