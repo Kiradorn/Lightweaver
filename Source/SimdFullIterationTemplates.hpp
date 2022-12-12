@@ -392,7 +392,7 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
 
             if (updateJ)
             {
-                accumulate_J<simd>(0.5 * atmos.wmu(mu), J, I);
+                accumulate_J<simd>(0.5 * atmos.wmu(mu, toObsI), J, I);
 
                 if (JRest && spect.hPrdActive && spect.hPrdActive(la))
                 {
@@ -402,7 +402,7 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                         const auto& coeffs = spect.JCoeffs(hPrdLa, mu, toObs, k);
                         for (const auto& c : coeffs)
                         {
-                            JRest(c.idx, k) += 0.5 * atmos.wmu(mu) * c.frac * I(k);
+                            JRest(c.idx, k) += 0.5 * atmos.wmu(mu, toObsI) * c.frac * I(k);
                         }
                     }
                 }
@@ -427,7 +427,7 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                         if (!t.is_active(la))
                             continue;
 
-                        const f64 wmu = 0.5 * atmos.wmu(mu);
+                        const f64 wmu = 0.5 * atmos.wmu(mu, toObsI);
                         uv_opt<simd>(&t, la, mu, toObs, Uji, Vij, Vji);
 
                         const bool computeRates = (UpdateRates && !PrdRatesOnly) ||
@@ -449,7 +449,7 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                         if (!t.is_active(la))
                             continue;
 
-                        const f64 wmu = 0.5 * atmos.wmu(mu);
+                        const f64 wmu = 0.5 * atmos.wmu(mu, toObsI);
                         uv_opt<simd>(&t, la, mu, toObs, Uji, Vij, Vji);
 
                         compute_full_operator_rates<simd, false, true>(&atom, kr,

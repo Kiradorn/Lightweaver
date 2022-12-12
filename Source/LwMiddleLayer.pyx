@@ -133,19 +133,20 @@ cdef extern from "Lightweaver.hpp":
         F64View vx
         F64View vy
         F64View vz
-        F64View2D vlosMu
+        F64View3D vlosMu
         F64View B
         F64View gammaB
         F64View chiB
-        F64View2D cosGamma
-        F64View2D cos2chi
-        F64View2D sin2chi
+        F64View3D cosGamma
+        F64View3D cos2chi
+        F64View3D sin2chi
         F64View vturb
         F64View nHTot
-        F64View muz
-        F64View muy
-        F64View mux
-        F64View wmu
+        F64View2D muz
+        F64View2D muy
+        F64View2D mux
+        F64View2D wmu
+        bool_t quadSymm
 
         AtmosphericBoundaryCondition xLowerBc
         AtmosphericBoundaryCondition xUpperBc
@@ -597,19 +598,20 @@ cdef class LwAtmosphere:
     cdef f64[::1] vx
     cdef f64[::1] vy
     cdef f64[::1] vz
-    cdef f64[:,::1] vlosMu
+    cdef f64[:,:,::1] vlosMu
     cdef f64[::1] B
     cdef f64[::1] gammaB
     cdef f64[::1] chiB
-    cdef f64[:,::1] cosGamma
-    cdef f64[:,::1] cos2chi
-    cdef f64[:,::1] sin2chi
+    cdef f64[:,:,::1] cosGamma
+    cdef f64[:,:,::1] cos2chi
+    cdef f64[:,:,::1] sin2chi
     cdef f64[::1] vturb
     cdef f64[::1] nHTot
-    cdef f64[::1] muz
-    cdef f64[::1] muy
-    cdef f64[::1] mux
-    cdef f64[::1] wmu
+    cdef f64[:,::1] muz
+    cdef f64[:,::1] muy
+    cdef f64[:,::1] mux
+    cdef f64[:,::1] wmu
+    cdef bool_t quadSymm
     # TODO(cmo): I don't really like storing Nwave here, but I don't know how
     # much of a choice we have.
     cdef int Nwave
@@ -662,15 +664,16 @@ cdef class LwAtmosphere:
         check_shape_exception(self.nHTot, Nspace, name='vturb')
         try:
             self.muz = atmos.muz
-            check_shape_exception(self.muz, Nrays, name='muz')
+            check_shape_exception(self.muz, (Nrays,2), 2, name='muz')
             self.muy = atmos.muy
-            check_shape_exception(self.muy, Nrays, name='muy')
+            check_shape_exception(self.muy, (Nrays,2), 2, name='muy')
             self.mux = atmos.mux
-            check_shape_exception(self.mux, Nrays, name='mux')
+            check_shape_exception(self.mux, (Nrays,2), 2, name='mux')
             self.wmu = atmos.wmu
-            check_shape_exception(self.wmu, Nrays, name='wmu')
+            check_shape_exception(self.wmu, (Nrays,2), 2, name='wmu')
         except AttributeError as e:
             raise ValueError(f'One of the quadrature values not found, was .quadrature called on the Atmosphere object? (Caught: {e}')
+        self.quadSymm = atmos.quadSymm
         self.atmos.z = f64_view(self.z)
         self.atmos.height = f64_view(self.z)
         self.atmos.x = f64_view(self.x)
@@ -682,10 +685,11 @@ cdef class LwAtmosphere:
         self.atmos.vz = f64_view(self.vz)
         self.atmos.vturb = f64_view(self.vturb)
         self.atmos.nHTot = f64_view(self.nHTot)
-        self.atmos.muz = f64_view(self.muz)
-        self.atmos.muy = f64_view(self.muy)
-        self.atmos.mux = f64_view(self.mux)
-        self.atmos.wmu = f64_view(self.wmu)
+        self.atmos.muz = f64_view_2(self.muz)
+        self.atmos.muy = f64_view_2(self.muy)
+        self.atmos.mux = f64_view_2(self.mux)
+        self.atmos.wmu = f64_view_2(self.wmu)
+        self.atmos.quadSymm = self.quadSymm
 
         if atmos.B is not None:
             self.B = atmos.B
@@ -699,16 +703,16 @@ cdef class LwAtmosphere:
             self.atmos.B = f64_view(self.B)
             self.atmos.gammaB = f64_view(self.gammaB)
             self.atmos.chiB = f64_view(self.chiB)
-            self.cosGamma = np.zeros((Nrays, Nspace))
-            self.atmos.cosGamma = f64_view_2(self.cosGamma)
-            self.cos2chi = np.zeros((Nrays, Nspace))
-            self.atmos.cos2chi = f64_view_2(self.cos2chi)
-            self.sin2chi = np.zeros((Nrays, Nspace))
-            self.atmos.sin2chi = f64_view_2(self.sin2chi)
+            self.cosGamma = np.zeros((Nrays, 2, Nspace))
+            self.atmos.cosGamma = f64_view_3(self.cosGamma)
+            self.cos2chi = np.zeros((Nrays, 2, Nspace))
+            self.atmos.cos2chi = f64_view_3(self.cos2chi)
+            self.sin2chi = np.zeros((Nrays, 2, Nspace))
+            self.atmos.sin2chi = f64_view_3(self.sin2chi)
 
 
-        self.vlosMu = np.zeros((Nrays, Nspace))
-        self.atmos.vlosMu = f64_view_2(self.vlosMu)
+        self.vlosMu = np.zeros((Nrays, 2, Nspace))
+        self.atmos.vlosMu = f64_view_3(self.vlosMu)
 
         self.configure_bcs(atmos)
         self.update_projections()
@@ -894,7 +898,7 @@ cdef class LwAtmosphere:
         self.vz = state['vz']
         self.atmos.vz = f64_view(self.vz)
         self.vlosMu = state['vlosMu']
-        self.atmos.vlosMu = f64_view_2(self.vlosMu)
+        self.atmos.vlosMu = f64_view_3(self.vlosMu)
         if state['B'] is not None:
             self.B = state['B']
             self.atmos.B = f64_view(self.B)
@@ -903,23 +907,25 @@ cdef class LwAtmosphere:
             self.chiB = state['chiB']
             self.atmos.chiB = f64_view(self.chiB)
             self.cosGamma = state['cosGamma']
-            self.atmos.cosGamma = f64_view_2(self.cosGamma)
+            self.atmos.cosGamma = f64_view_3(self.cosGamma)
             self.cos2chi = state['cos2chi']
-            self.atmos.cos2chi = f64_view_2(self.cos2chi)
+            self.atmos.cos2chi = f64_view_3(self.cos2chi)
             self.sin2chi = state['sin2chi']
-            self.atmos.sin2chi = f64_view_2(self.sin2chi)
+            self.atmos.sin2chi = f64_view_3(self.sin2chi)
         self.vturb = state['vturb']
         self.atmos.vturb = f64_view(self.vturb)
         self.nHTot = state['nHTot']
         self.atmos.nHTot = f64_view(self.nHTot)
         self.muz = state['muz']
-        self.atmos.muz = f64_view(self.muz)
+        self.atmos.muz = f64_view_2(self.muz)
         self.muy = state['muy']
-        self.atmos.muy = f64_view(self.muy)
+        self.atmos.muy = f64_view_2(self.muy)
         self.mux = state['mux']
-        self.atmos.mux = f64_view(self.mux)
+        self.atmos.mux = f64_view_2(self.mux)
         self.wmu = state['wmu']
-        self.atmos.wmu = f64_view(self.wmu)
+        self.atmos.wmu = f64_view_2(self.wmu)
+        self.quadSymm = state['quadSymm']
+        self.atmos.quadSymm = self.quadSymm
 
         cdef int Nspace = self.temperature.shape[0]
         self.atmos.Nspace = Nspace

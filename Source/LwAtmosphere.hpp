@@ -190,19 +190,20 @@ struct Atmosphere
     F64View vx;
     F64View vy;
     F64View vz;
-    F64View2D vlosMu;
+    F64View3D vlosMu;
     F64View B;
     F64View gammaB;
     F64View chiB;
-    F64View2D cosGamma;
-    F64View2D cos2chi;
-    F64View2D sin2chi;
+    F64View3D cosGamma;
+    F64View3D cos2chi;
+    F64View3D sin2chi;
     F64View vturb;
     F64View nHTot;
-    F64View muz;
-    F64View muy;
-    F64View mux;
-    F64View wmu;
+    F64View2D muz;
+    F64View2D muy;
+    F64View2D mux;
+    F64View2D wmu;
+    bool quadSymm;
 
     AtmosphericBoundaryCondition xLowerBc;
     AtmosphericBoundaryCondition xUpperBc;

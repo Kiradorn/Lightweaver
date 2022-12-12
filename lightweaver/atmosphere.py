@@ -1395,8 +1395,8 @@ class Atmosphere:
                     x = mid + halfWidth * x
                     w *= halfWidth
 
-                    self.muz = x
-                    self.wmu = w
+                    self.muz = np.ascontiguousarray(np.tile(np.tile(x,2),(2,1)).T*[-1,1])
+                    self.wmu = np.ascontiguousarray(np.tile(np.tile(w,2),(2,1)).T)
                 else:
                     raise ValueError('Unsupported Nrays=%d' % Nrays)
             elif Nrays is not None and mu is not None:
@@ -1407,11 +1407,13 @@ class Atmosphere:
                 if len(mu) != len(wmu):
                     raise ValueError('mu and wmu must be the same shape')
 
-                self.muz = np.array(mu)
-                self.wmu = np.array(wmu)
+                self.muz = np.ascontiguousarray(np.array([-mu,mu]).T)
+                self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
 
             self.muy = np.zeros_like(self.muz)
             self.mux = np.sqrt(1.0 - self.muz**2)
+            self.mux[self.Nrays // 2:,:] *= -1
+            self.mux[:,1] *= -1
         else:
             with open(get_data_path() + 'Quadratures.pickle', 'rb') as pkl:
                 quads = pickle.load(pkl)
@@ -1430,21 +1432,25 @@ class Atmosphere:
                 # x = sin theta cos chi
                 # y = sin theta sin chi
                 # z = cos theta
-                self.mux = np.zeros(Nrays)
-                self.mux[:Nrays // 2] = np.sin(theta) * np.cos(chi)
-                self.mux[Nrays // 2:] = -np.sin(theta) * np.cos(chi)
+                self.mux = np.zeros([Nrays,Nrays])
+                self.mux[:Nrays // 2,:] = np.sin(theta) * np.cos(chi)
+                self.mux[Nrays // 2:,:] = -np.sin(theta) * np.cos(chi)
+                self.mux = np.ascontiguousarray(self.mux)
                 self.muz = np.zeros(Nrays)
-                self.muz[:Nrays // 2] = np.cos(theta)
-                self.muz[Nrays // 2:] = np.cos(theta)
+                self.muz[:,0] = -np.cos(theta)
+                self.muz[:,1] = np.cos(theta)
+                self.muz = np.ascontiguousarray(self.muz)
                 self.wmu = np.zeros(Nrays)
-                self.wmu[:Nrays // 2] = quad[:, 0]
-                self.wmu[Nrays // 2:] = quad[:, 0]
-                self.wmu /= np.sum(self.wmu)
+                self.wmu[:Nrays // 2,:] = quad[:, 0]
+                self.wmu[Nrays // 2:,:] = quad[:, 0]
+                self.wmu /= np.sum(self.wmu[:,0])
                 self.muy = np.sqrt(1.0 - (self.mux**2 + self.muz**2))
+                self.muy = np.ascontiguousarray(self.muy)
 
             else:
                 raise NotImplementedError()
 
+        self.quadSymm = True # NOTE(jmj): Assume that quadrature from leggaus and the shipped default tables is symmetric about z axis
         self.configure_bcs()
 
 
@@ -1487,6 +1493,8 @@ class Atmosphere:
             normalised.
         '''
 
+        self.quadSymm = True
+
         if isinstance(muz, float):
             muz = [muz]
         if isinstance(mux, float):
@@ -1519,14 +1527,39 @@ class Atmosphere:
                 raise ValueError('mux**2 + muy**2 + muz**2 != 1.0')
 
         if not np.all(self.muz > 0):
-            raise ValueError('muz must be > 0')
+            self.quadSymm = False
+            print('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
+            # log.info('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
+            # raise ValueError('muz must be > 0') #No longer want this to kill program since we want to allow quadrature to be set on entire sphere not just hemisphere.
+            print('Ordering mu angles for upDown compliance')
+            # log.info('Ordering mu angles for upDown compliance') # NOTE(jmj): upDown is structured [down,up] where up is positive muz
 
-        if wmu is not None:
-            self.wmu = np.array(wmu)
+            muz1Sorted = np.argsort(self.muz[self.muz>0])
+            muz2Sorted = np.argsort(self.muz[self.muz<0])
+            muz1 = self.muz[self.muz>0][muz1Sorted]
+            muz2 = self.muz[self.muz<0][np.flip(muz2Sorted)]
+            mux1 = self.mux[self.muz>0][muz1Sorted]
+            mux2 = self.mux[self.muz<0][np.flip(muz2Sorted)]
+            muy1 = self.muy[self.muz>0][muz1Sorted]
+            muy2 = self.muy[self.muz<0][np.flip(muz2Sorted)]
+
+            self.muz = np.ascontiguousarray(np.append(muz1,muz2))
+            self.mux = np.ascontiguousarray(np.append(mux1,mux2))
+            self.muy = np.ascontiguousarray(np.append(muy1,muy2))
+
+            wmu1 = self.wmu[self.muz>0][muz1Sorted]
+            wmu2 = self.wmu[self.muz<0][np.flip(muz2Sorted)]
+            self.wmu = np.ascontiguousarray(np.append(wmu1,wmu2))
+
+        else:
+            if wmu is not None:
+                self.wmu = np.array(wmu)
+            
 
             if not np.isclose(self.wmu.sum(), 1.0):
                 raise ValueError('sum of wmus is not 1.0')
 
+        
         self.configure_bcs(upOnly=upOnly)
 
     def configure_bcs(self, upOnly: bool=False):
@@ -1541,80 +1574,120 @@ class Atmosphere:
             (default: False)
         '''
 
+
+
         # NOTE(cmo): We always have z-bcs
         # For zLowerBc, muz is positive, and we have all mux, muz
         mux, muy, muz = self.mux, self.muy, self.muz
         # NOTE(cmo): indexVector is of shape (mu, toObs) to allow the core to
         # easily destructure the blob that will be handed to it from
         # compute_bc.
-        indexVector = np.ones((self.mux.shape[0], 2), dtype=np.int32) * -1
-        indexVector[:, 1] = np.arange(mux.shape[0])
-        self.zLowerBc.set_required_angles(mux, muy, muz, indexVector)
 
-        indexVector = np.ones((mux.shape[0], 2), dtype=np.int32) * -1
-        if not upOnly:
-            indexVector[:, 0] = np.arange(mux.shape[0])
-        self.zUpperBc.set_required_angles(-mux, -muy, -muz, indexVector)
+        if self.quadSymm:
+            muxShape = self.mux.shape[0]
+        else:
+            muxShape = self.mux.shape[0] // 2
+        
+        indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
+        indexVector[:, 1] = np.arange(muxShape)
+
+        if self.quadSymm:    
+            self.zLowerBc.set_required_angles(mux, muy, muz, indexVector)
+        else:
+            self.zLowerBc.set_required_angles(mux[muxShape:], muy[muxShape:], muz[muxShape:], indexVector)
+
+        print(mux)
+        print(muy)
+        print(muz)
+        print('zLowerBc: ', indexVector)
 
         toObsRange = [0, 1]
         if upOnly:
             toObsRange = [1]
+        
+        indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
+        if not upOnly:
+            indexVector[:, 0] = np.arange(muxShape)
+        
+        if self.quadSymm == True:
+            self.zUpperBc.set_required_angles(mux, muy, muz, indexVector)
+        else:
+            self.zUpperBc.set_required_angles(mux[:muxShape], muy[:muxShape], muz[:muxShape], indexVector)
 
-        # NOTE(cmo): If 2+D we have x-bcs too
-        # xLowerBc has all muz and all mux > 0
-        mux, muy, muz = [], [], []
-        indexVector = np.ones((self.mux.shape[0], 2), dtype=np.int32) * -1
+        print('zUpperBc: ', indexVector)
+
+        indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         count = 0
-        musDone = np.zeros(self.muz.shape[0], dtype=np.bool_)
-        for mu in range(self.muz.shape[0]):
-            for equalMu in np.argwhere(np.abs(self.muz) == self.muz[mu]).reshape(-1)[::-1]:
-                if musDone[equalMu]:
-                    continue
-                musDone[equalMu] = True
+        musDone = np.zeros(muxShape, dtype=np.bool_)
+        for mu in range(muxShape):
+            if self.quadSymm:
+                for equalMu in np.argwhere(np.isclose(abs(self.muz), abs(self.muz[mu]))).reshape(-1)[::-1]:
+                    if musDone[equalMu]:
+                        continue
+                    musDone[equalMu] = True
 
-                for toObsI in toObsRange:
-                    sign = [-1, 1][toObsI]
-                    sMux = sign * self.mux[equalMu]
-                    if sMux > 0:
-                        mux.append(sMux)
-                        muy.append(sign * self.muy[equalMu])
-                        muz.append(sign * self.muz[equalMu])
-                        indexVector[equalMu, toObsI] = count
-                        count += 1
-            if np.all(musDone):
-                break
+                    for toObsI in toObsRange:
+                        if self.mux[equalMu,toObsI] > 0:
+                            indexVector[equalMu, toObsI] = count
+                            count += 1
+                if np.all(musDone):
+                    break
+            else:
+                for equalMu in np.argwhere(np.isclose(abs(self.muz[self.mux>0]), abs(self.muz[self.mux>0][mu]))).reshape(-1)[::-1]:
+                    if musDone[equalMu]:
+                        continue
+                    musDone[equalMu] = True
+                    for toObsI in toObsRange:
+                        sign = [-1, 1][toObsI]
+                        if ((sign<0)==(self.muz[self.mux>0][equalMu]<0)):
+                            mux.append(self.mux[self.mux>0][equalMu])
+                            muy.append(self.muy[self.mux>0][equalMu])
+                            muz.append(self.muz[self.mux>0][equalMu])
+                            indexVector[equalMu, toObsI] = count
+                            count += 1
+                if np.all(musDone):
+                    break
 
-        mux = np.array(mux)
-        muy = np.array(muy)
-        muz = np.array(muz)
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
 
-        mux, muy, muz = [], [], []
-        indexVector = np.ones((self.mux.shape[0], 2), dtype=np.int32) * -1
+        print('xLowerBc: ', indexVector)
+        
+        indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         count = 0
-        musDone = np.zeros(self.muz.shape[0], dtype=np.bool_)
-        for mu in range(self.muz.shape[0]):
-            for equalMu in np.argwhere(np.abs(self.muz) == self.muz[mu]).reshape(-1):
-                if musDone[equalMu]:
-                    continue
-                musDone[equalMu] = True
+        musDone = np.zeros(muxShape, dtype=np.bool_)
+        for mu in range(muxShape):
+            if self.quadSymm:
+                for equalMu in np.argwhere(np.isclose(abs(self.muz), abs(self.muz[mu]))).reshape(-1):
+                    if musDone[equalMu]:
+                        continue
+                    musDone[equalMu] = True
 
-                for toObsI in toObsRange:
-                    sign = [-1, 1][toObsI]
-                    sMux = sign * self.mux[equalMu]
-                    if sMux < 0:
-                        mux.append(sMux)
-                        muy.append(sign * self.muy[equalMu])
-                        muz.append(sign * self.muz[equalMu])
-                        indexVector[equalMu, toObsI] = count
-                        count += 1
-            if np.all(musDone):
-                break
+                    for toObsI in toObsRange:
+                        if self.mux[equalMu,toObsI] < 0:
+                            indexVector[equalMu, toObsI] = count
+                            count += 1
+                if np.all(musDone):
+                    break
+            else:
+                for equalMu in np.argwhere(np.isclose(abs(self.muz[self.mux<0]), abs(self.muz[self.mux<0][mu]))).reshape(-1):
+                    if musDone[equalMu]:
+                        continue
+                    musDone[equalMu] = True
+                    for toObsI in toObsRange:
+                        sign = [-1, 1][toObsI]
+                        if ((sign>0)==(self.muz[self.mux<0][equalMu]>0)):
+                            mux.append(self.mux[self.mux<0][equalMu])
+                            muy.append(self.muy[self.mux<0][equalMu])
+                            muz.append(self.muz[self.mux<0][equalMu])
+                            indexVector[equalMu, toObsI] = count
+                            count += 1
+                if np.all(musDone):
+                    break
 
-        mux = np.array(mux)
-        muy = np.array(muy)
-        muz = np.array(muz)
+
         self.xUpperBc.set_required_angles(mux, muy, muz, indexVector)
+
+        print('xUpperBc: ', indexVector)
 
         self.yLowerBc.set_required_angles(np.zeros((0)), np.zeros((0)), np.zeros((0)),
                                           np.ones((self.mux.shape[0], 2),

@@ -30,7 +30,7 @@ void Transition::compute_phi_la(const Atmosphere& atmos, const F64View& aDamp,
 {
     namespace C = Constants;
 
-    constexpr f64 sign[] = { -1.0, 1.0 };
+    // constexpr f64 sign[] = { -1.0, 1.0 };
     // Why is there still no constexpr math in std? :'(
     const f64 sqrtPi = sqrt(C::Pi);
 
@@ -39,10 +39,11 @@ void Transition::compute_phi_la(const Atmosphere& atmos, const F64View& aDamp,
     {
         for (int toObs = 0; toObs < 2; ++toObs)
         {
-            const f64 s = sign[toObs];
+            // const f64 s = sign[toObs];
             for (int k = 0; k < atmos.Nspace; ++k)
             {
-                const f64 vk = (vBase + s * atmos.vlosMu(mu, k)) / vBroad(k);
+                // const f64 vk = (vBase + s * atmos.vlosMu(mu, toObs, k)) / vBroad(k);
+                const f64 vk = (vBase + atmos.vlosMu(mu, toObs, k)) / vBroad(k);
                 const f64 p = voigt_H(aDamp(k), vk) / (sqrtPi * vBroad(k));
                 phi(lt, mu, toObs, k) = p;
             }
@@ -115,9 +116,9 @@ void Transition::compute_wphi(const Atmosphere& atmos)
         const f64 wla = wlambda(la);
         for (int mu = 0; mu < phi.shape(1); ++mu)
         {
-            const f64 wlamu = wla * 0.5 * atmos.wmu(mu);
             for (int toObs = 0; toObs < 2; ++toObs)
             {
+                const f64 wlamu = wla * 0.5 * atmos.wmu(mu,toObs);
                 for (int k = 0; k < atmos.Nspace; ++k)
                 {
                     const f64 p = phi(la, mu, toObs, k);
@@ -472,16 +473,18 @@ void piecewise_linear_1d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
 {
     const f64 wav = wave(la);
     JasUnpack((*fd), atmos, chi);
-    f64 zmu = 0.5 / atmos->muz(mu);
     auto height = atmos->height;
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
+    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
+        toObsI = 0;
     }
+    f64 zmu = 0.5 / atmos->muz(mu,toObsI);
     f64 dtau_uw = zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;
@@ -538,16 +541,19 @@ void piecewise_bezier3_1d(FormalData* fd, int la, int mu, bool toObs, const F64V
     JasUnpack((*fd), atmos, chi);
     // This is 1.0 here, as we are normally effectively rolling in the averaging
     // factor for dtau, whereas it's explicit in this solver
-    f64 zmu = 1.0 / atmos->muz(mu);
     auto height = atmos->height;
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
+    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
+        toObsI = 0;
     }
+    
+    f64 zmu = 1.0 / atmos->muz(mu,toObsI);
     f64 dtau_uw = 0.5 * zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;
@@ -605,16 +611,20 @@ void piecewise_besser_1d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     JasUnpack((*fd), atmos, chi);
     // This is 1.0 here, as we are normally effectively rolling in the averaging
     // factor for dtau, whereas it's explicit in this solver
-    f64 zmu = 1.0 / atmos->muz(mu);
+    
     auto height = atmos->height;
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
+    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
+        toObsI = 0;
     }
+
+    f64 zmu = 1.0 / atmos->muz(mu, toObsI);
     f64 dtau_uw = 0.5 * zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;

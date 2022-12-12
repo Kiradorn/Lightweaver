@@ -16,7 +16,7 @@ void Transition::compute_polarised_profiles(
     if (!polarised)
         return;
 
-    constexpr f64 sign[] = { -1.0, 1.0 };
+    // constexpr f64 sign[] = { -1.0, 1.0 };
 
     const f64 larmor = C::QElectron / (4.0 * C::Pi * C::MElectron) * (lambda0 * C::NM_TO_M);
 
@@ -46,13 +46,13 @@ void Transition::compute_polarised_profiles(
         const f64 wla = wlambda(la);
         for (int mu = 0; mu < phi.shape(1); ++mu)
         {
-            const f64 wlamu = wla * 0.5 * atmos.wmu(mu);
             for (int toObs = 0; toObs < 2; ++toObs)
             {
-                const f64 s = sign[toObs];
+                const f64 wlamu = wla * 0.5 * atmos.wmu(mu, toObs);
+                // const f64 s = sign[toObs];
                 for (int k = 0; k < atmos.Nspace; ++k)
                 {
-                    const f64 vk = (vBase + s * atmos.vlosMu(mu, k)) / vBroad(k);
+                    const f64 vk = (vBase + atmos.vlosMu(mu, toObs, k)) / vBroad(k);
                     f64 phi_sb = 0.0, phi_pi = 0.0, phi_sr = 0.0;
                     f64 psi_sb = 0.0, psi_pi = 0.0, psi_sr = 0.0;
 
@@ -85,25 +85,25 @@ void Transition::compute_polarised_profiles(
                         break;
                         }
                     }
-                    f64 sin2_gamma = 1.0 - square(atmos.cosGamma(mu, k));
-                    f64 cos_2chi = atmos.cos2chi(mu, k);
-                    f64 sin_2chi = atmos.sin2chi(mu, k);
-                    f64 cos_gamma = atmos.cosGamma(mu, k);
+                    f64 sin2_gamma = 1.0 - square(atmos.cosGamma(mu, toObs, k));
+                    f64 cos_2chi = atmos.cos2chi(mu, toObs, k);
+                    f64 sin_2chi = atmos.sin2chi(mu, toObs, k);
+                    f64 cos_gamma = atmos.cosGamma(mu, toObs, k);
 
                     f64 phi_sigma = phi_sr + phi_sb;
                     f64 phi_delta = 0.5 * phi_pi - 0.25 * phi_sigma;
                     phi(la, mu, toObs, k) += (phi_delta * sin2_gamma + 0.5 * phi_sigma) * sv(k);
 
-                    phiQ(la, mu, toObs, k) += s * phi_delta * sin2_gamma * cos_2chi * sv(k);
+                    phiQ(la, mu, toObs, k) += phi_delta * sin2_gamma * cos_2chi * sv(k);
                     phiU(la, mu, toObs, k) += phi_delta * sin2_gamma * sin_2chi * sv(k);
-                    phiV(la, mu, toObs, k) += s * 0.5 * (phi_sr - phi_sb) * cos_gamma * sv(k);
+                    phiV(la, mu, toObs, k) += 0.5 * (phi_sr - phi_sb) * cos_gamma * sv(k);
 
                     f64 psi_sigma = psi_sr + psi_sb;
                     f64 psi_delta = 0.5 * psi_pi - 0.25 * psi_sigma;
 
-                    psiQ(la, mu, toObs, k) += s * psi_delta * sin2_gamma * cos_2chi * sv(k);
+                    psiQ(la, mu, toObs, k) += psi_delta * sin2_gamma * cos_2chi * sv(k);
                     psiU(la, mu, toObs, k) += psi_delta * sin2_gamma * sin_2chi * sv(k);
-                    psiV(la, mu, toObs, k) += s * 0.5 * (psi_sr - psi_sb) * cos_gamma * sv(k);
+                    psiV(la, mu, toObs, k) += 0.5 * (psi_sr - psi_sb) * cos_gamma * sv(k);
 
                     wphi(k) += wlamu * phi(la, mu, toObs, k);
                 }
@@ -352,16 +352,20 @@ void piecewise_stokes_bezier3_1d(FormalDataStokes* fd, int la, int mu, bool toOb
     }
 
     JasUnpack((*fd), atmos, chi);
-    f64 zmu = 1.0 / atmos->muz(mu);
+    
     auto height = atmos->height;
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
+    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
+        toObsI = 0;
     }
+
+    f64 zmu = 1.0 / atmos->muz(mu, toObsI);
     f64 dtau_uw = 0.5 * zmu * (chi(0, kStart) + chi(0, kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -478,14 +482,14 @@ f64 stokes_fs_core(StokesCoreData& data, int la, bool updateJ, bool upOnly)
     f64 dJMax = 0.0;
     for (int mu = 0; mu < Nrays; ++mu)
     {
-        // NOTE(cmo): Whilst these don't directly match LL04, they do nicely
-        // match Trujillo Bueno 2001
-        // See also Fluri & Stenflo 1999, Del Pino Aléman et al 2014.
-        const f64 mu2 = square(atmos.muz(mu));
-        const f64 wJ20_I = inv2root2 * (3.0 * mu2 - 1.0);
-        const f64 wJ20_Q = inv2root2 * 3.0 * (mu2 - 1.0); // -3/(2sqrt2) sin^2\theta
         for (int toObsI = toObsStart; toObsI < toObsEnd; toObsI += 1)
         {
+            // NOTE(cmo): Whilst these don't directly match LL04, they do nicely
+            // match Trujillo Bueno 2001
+            // See also Fluri & Stenflo 1999, Del Pino Aléman et al 2014.
+            const f64 mu2 = square(atmos.muz(mu, toObsI));
+            const f64 wJ20_I = inv2root2 * (3.0 * mu2 - 1.0);
+            const f64 wJ20_Q = inv2root2 * 3.0 * (mu2 - 1.0); // -3/(2sqrt2) sin^2\theta
             bool toObs = (bool)toObsI;
             bool polarisedFrequency = J20 || false;
             if (!continuaOnly || (continuaOnly && (mu == 0 && toObsI == toObsStart)))
@@ -634,17 +638,20 @@ f64 stokes_fs_core(StokesCoreData& data, int la, bool updateJ, bool upOnly)
             // TODO(cmo): Rates?
             if (updateJ)
             {
-                const f64 wmu = atmos.wmu(mu);
-                for (int k = 0; k < Nspace; ++k)
+                for (int toObsI = 0; toObsI < 2; ++toObsI)
                 {
-                    J(k) += 0.5 * wmu * I(0, k);
-                }
-                if (J20)
-                {
-                    const f64 wmuJ20_I = wJ20_I * wmu;
-                    const f64 wmuJ20_Q = wJ20_Q * wmu;
+                    const f64 wmu = atmos.wmu(mu, toObsI);
                     for (int k = 0; k < Nspace; ++k)
-                        J20(la, k) += wmuJ20_I * I(0, k) + wmuJ20_Q * I(1, k);
+                    {
+                        J(k) += 0.5 * wmu * I(0, k);
+                    }
+                    if (J20)
+                    {
+                        const f64 wmuJ20_I = wJ20_I * wmu;
+                        const f64 wmuJ20_Q = wJ20_Q * wmu;
+                        for (int k = 0; k < Nspace; ++k)
+                            J20(la, k) += wmuJ20_I * I(0, k) + wmuJ20_Q * I(1, k);
+                    }
                 }
             }
         }

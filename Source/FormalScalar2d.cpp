@@ -451,11 +451,14 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
         std::abort();
     }
 
-    f64 muz = If toObs Then atmos->muz(mu) Else -atmos->muz(mu) End;
-    // NOTE(cmo): We invert the sign of mux, because for muz it is done
-    // implicitly, and both need to be the additive inverse so the ray for
-    // !toObs is the opposite of the toObs ray.
-    f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
+    // f64 muz = If toObs Then atmos->muz(mu) Else -atmos->muz(mu) End;
+    // // NOTE(cmo): We invert the sign of mux, because for muz it is done
+    // // implicitly, and both need to be the additive inverse so the ray for
+    // // !toObs is the opposite of the toObs ray.
+    // f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
+
+    f64 muz = If toObs Then atmos->muz(mu, 1) Else atmos->muz(mu, 0) End;
+    f64 mux = If toObs Then atmos->mux(mu, 1) Else atmos->mux(mu, 0) End;
 
 
     // NOTE(cmo): As always, assume toObs
@@ -758,11 +761,14 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
         std::abort();
     }
 
-    f64 muz = If toObs Then atmos->muz(mu) Else -atmos->muz(mu) End;
-    // NOTE(cmo): We invert the sign of mux, because for muz it is done
-    // implicitly, and both need to be the additive inverse so the ray for
-    // !toObs is the opposite of the toObs ray.
-    f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
+    // f64 muz = If toObs Then atmos->muz(mu) Else -atmos->muz(mu) End;
+    // // NOTE(cmo): We invert the sign of mux, because for muz it is done
+    // // implicitly, and both need to be the additive inverse so the ray for
+    // // !toObs is the opposite of the toObs ray.
+    // f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
+
+    f64 muz = If toObs Then atmos->muz(mu, 1) Else atmos->muz(mu, 0) End;
+    f64 mux = If toObs Then atmos->mux(mu, 1) Else atmos->mux(mu, 0) End;
 
 
     // NOTE(cmo): As always, assume toObs
@@ -1209,8 +1215,11 @@ void build_intersection_list(Atmosphere* atmos)
         for (int toObsI = 0; toObsI < 2; ++toObsI)
         {
             bool toObs = (bool)toObsI;
-            f64 muz = If toObs Then atmos->muz(mu) Else -atmos->muz(mu) End;
-            f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
+            // f64 muz = If toObs Then atmos->muz(mu) Else -atmos->muz(mu) End;
+            // f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
+
+            f64 muz = atmos->muz(mu, toObsI);
+            f64 mux = atmos->mux(mu, toObsI);
 
             // NOTE(cmo): As always, assume toObs
             int dk = -1;

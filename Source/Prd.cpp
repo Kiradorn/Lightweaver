@@ -751,15 +751,15 @@ void configure_hprd_coeffs(Context& ctx)
     // than the basic HPRD in these cases.
     auto check_lambda_scatter_into_prd_region = [&](int la)
     {
-        constexpr f64 sign[] = {-1.0, 1.0};
+        // constexpr f64 sign[] = {-1.0, 1.0};
         for (int mu = 0; mu < atmos.Nrays; ++mu)
         {
             for (int toObs = 0; toObs <= 1; ++toObs)
             {
                 for (int k = 0; k < atmos.Nspace; ++k)
                 {
-                    const f64 s = sign[toObs];
-                    const f64 fac = 1.0 + atmos.vlosMu(mu, k) * s / C::CLight;
+                    // const f64 s = sign[toObs];
+                    const f64 fac = 1.0 + atmos.vlosMu(mu, toObs, k) / C::CLight;
                     int prevIndex = max(la-1, 0);
                     int nextIndex = min(la+1, (int)spect.wavelength.shape(0)-1);
                     const f64 prevLambda = spect.wavelength(prevIndex) * fac;
@@ -801,7 +801,7 @@ void configure_hprd_coeffs(Context& ctx)
        )
         spect.JRest = F64Arr2D(0.0, prdLambdas.size(), atmos.Nspace);
     spect.JCoeffs = Prd::JCoeffVec(hPrdIdxs.size(), atmos.Nrays, 2, atmos.Nspace);
-    constexpr f64 sign[] = {-1.0, 1.0};
+    // constexpr f64 sign[] = {-1.0, 1.0};
 
     for (auto idx : hPrdIdxs)
     {
@@ -813,9 +813,9 @@ void configure_hprd_coeffs(Context& ctx)
                 {
                     int hPrdLa = spect.la_to_hPrdLa(idx);
                     auto coeffVec = spect.JCoeffs(hPrdLa, mu, toObs);
-                    const f64 s = sign[toObs];
+                    // const f64 s = sign[toObs];
 
-                    const f64 fac = 1.0 + atmos.vlosMu(mu, k) * s / C::CLight;
+                    const f64 fac = 1.0 + atmos.vlosMu(mu, toObs, k) / C::CLight;
                     int prevIndex = max(idx-1, 0);
                     int nextIndex = min(idx+1, Nspect-1);
                     const f64 prevLambda = spect.wavelength(prevIndex) * fac;
@@ -897,8 +897,8 @@ void configure_hprd_coeffs(Context& ctx)
                 {
                     for (int k = 0; k < atmos.Nspace; ++k)
                     {
-                        const f64 s = sign[toObs];
-                        const f64 lambdaRest = wavelength(lt) * (1.0 + atmos.vlosMu(mu, k) * s / C::CLight);
+                        // const f64 s = sign[toObs];
+                        const f64 lambdaRest = wavelength(lt) * (1.0 + atmos.vlosMu(mu, toObs, k) / C::CLight);
                         auto& c = coeffs(lt, mu, toObs, k);
                         if (lambdaRest <= wavelength(0))
                         {
