@@ -484,7 +484,7 @@ void piecewise_linear_1d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
         kStart = 0;
         toObsI = 0;
     }
-    f64 zmu = 0.5 / atmos->muz(mu,toObsI);
+    f64 zmu = abs(0.5 / atmos->muz(mu,toObsI));
     f64 dtau_uw = zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;

@@ -230,7 +230,19 @@ if sys.platform == 'win32':
 else:
     buildArgs = posixArgs
 
-SimdImpls = ['SSE2', 'AVX2FMA', 'AVX512']
+
+###############
+###############
+###############
+#HERE YOU MORON
+###############
+###############
+###############
+
+
+
+# SimdImpls = ['SSE2', 'AVX2FMA', 'AVX512']
+SimdImpls = []
 for simd in SimdImpls:
     if f'LW_NO_{simd}_LIB' in os.environ:
         SimdImpls.remove(simd)
