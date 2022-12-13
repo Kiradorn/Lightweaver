@@ -1395,11 +1395,11 @@ class Atmosphere:
                     x = mid + halfWidth * x
                     w *= halfWidth
 
-                    self.muz = np.ascontiguousarray(np.array([-x,x]).T)
-                    self.wmu = np.ascontiguousarray(np.array([w,w]).T)
+                    # self.muz = np.ascontiguousarray(np.array([-x,x]).T)
+                    # self.wmu = np.ascontiguousarray(np.array([w,w]).T)
                     
-                    # self.muz = np.ascontiguousarray(np.tile(np.tile(x,2),(2,1)).T*[-1,1])
-                    # self.wmu = np.ascontiguousarray(np.tile(np.tile(w,2),(2,1)).T)
+                    self.muz = np.ascontiguousarray(np.tile(np.tile(x,2),(2,1)).T*[-1,1])
+                    self.wmu = np.ascontiguousarray(np.tile(np.tile(w,2),(2,1)).T)
                 else:
                     raise ValueError('Unsupported Nrays=%d' % Nrays)
             elif Nrays is not None and mu is not None:
@@ -1415,8 +1415,8 @@ class Atmosphere:
 
             self.muy = np.zeros_like(self.muz)
             self.mux = np.sqrt(1.0 - self.muz**2)
-            # self.mux[self.Nrays // 2:,:] *= -1
-            self.mux[:,0] *= -1
+            self.mux[:self.Nrays // 2,:] *= -1
+            self.mux[:,1] *= -1
         else:
             with open(get_data_path() + 'Quadratures.pickle', 'rb') as pkl:
                 quads = pickle.load(pkl)
@@ -1589,20 +1589,20 @@ class Atmosphere:
         if self.quadSymm:
             muxShape = self.mux.shape[0]
         else:
-            muxShape = self.mux.shape[0] // 2
+            muxShape = self.mux.shape[0]
         
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         indexVector[:, 1] = np.arange(muxShape)
 
         if self.quadSymm:    
-            self.zLowerBc.set_required_angles(mux, muy, muz, indexVector)
+            self.zLowerBc.set_required_angles(mux[:,1], muy[:,1], muz[:,1], indexVector)
         else:
             self.zLowerBc.set_required_angles(mux[muxShape:], muy[muxShape:], muz[muxShape:], indexVector)
 
-        print(mux)
-        print(muy)
-        print(muz)
-        print('zLowerBc: ', indexVector)
+        print(self.zLowerBc.mux)
+        print(self.zLowerBc.muy)
+        print(self.zLowerBc.muz)
+        print('zLowerBc: ', self.zLowerBc.indexVector)
 
         toObsRange = [0, 1]
         if upOnly:
@@ -1613,12 +1613,17 @@ class Atmosphere:
             indexVector[:, 0] = np.arange(muxShape)
         
         if self.quadSymm == True:
-            self.zUpperBc.set_required_angles(mux, muy, muz, indexVector)
+            self.zUpperBc.set_required_angles(mux[:,0], muy[:,0], muz[:,0], indexVector)
         else:
             self.zUpperBc.set_required_angles(mux[:muxShape], muy[:muxShape], muz[:muxShape], indexVector)
 
-        print('zUpperBc: ', indexVector)
+        print(self.zUpperBc.mux)
+        print(self.zUpperBc.muy)
+        print(self.zUpperBc.muz)
+        print('zUpperBc: ', self.zUpperBc.indexVector)
 
+        
+        mux, muy, muz = [] , [] , []
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         count = 0
         musDone = np.zeros(muxShape, dtype=np.bool_)
@@ -1631,6 +1636,9 @@ class Atmosphere:
 
                     for toObsI in toObsRange:
                         if self.mux[equalMu,toObsI] > 0:
+                            mux.append(self.mux[equalMu,toObsI])
+                            muy.append(self.muy[equalMu,toObsI])
+                            muz.append(self.muz[equalMu,toObsI])
                             indexVector[equalMu, toObsI] = count
                             count += 1
                 if np.all(musDone):
@@ -1652,9 +1660,13 @@ class Atmosphere:
                     break
 
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
-
-        print('xLowerBc: ', indexVector)
         
+        print(self.xLowerBc.mux)
+        print(self.xLowerBc.muy)
+        print(self.xLowerBc.muz)
+        print('xLowerBc: ', self.xLowerBc.indexVector)
+
+        mux, muy, muz = [] , [] , []
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         count = 0
         musDone = np.zeros(muxShape, dtype=np.bool_)
@@ -1667,6 +1679,9 @@ class Atmosphere:
 
                     for toObsI in toObsRange:
                         if self.mux[equalMu,toObsI] < 0:
+                            mux.append(self.mux[equalMu,toObsI])
+                            muy.append(self.muy[equalMu,toObsI])
+                            muz.append(self.muz[equalMu,toObsI])
                             indexVector[equalMu, toObsI] = count
                             count += 1
                 if np.all(musDone):
@@ -1678,10 +1693,10 @@ class Atmosphere:
                     musDone[equalMu] = True
                     for toObsI in toObsRange:
                         sign = [-1, 1][toObsI]
-                        if ((sign>0)==(self.muz[self.mux<0][equalMu]>0)):
-                            mux.append(self.mux[self.mux<0][equalMu])
-                            muy.append(self.muy[self.mux<0][equalMu])
-                            muz.append(self.muz[self.mux<0][equalMu])
+                        if ((sign>0)==(self.muz[equalMu]>0)):
+                            mux.append(self.mux[equalMu])
+                            muy.append(self.muy[equalMu])
+                            muz.append(self.muz[equalMu])
                             indexVector[equalMu, toObsI] = count
                             count += 1
                 if np.all(musDone):
@@ -1690,7 +1705,10 @@ class Atmosphere:
 
         self.xUpperBc.set_required_angles(mux, muy, muz, indexVector)
 
-        print('xUpperBc: ', indexVector)
+        print(self.xUpperBc.mux)
+        print(self.xUpperBc.muy)
+        print(self.xUpperBc.muz)
+        print('xUpperBc: ', self.xUpperBc.indexVector)
 
         self.yLowerBc.set_required_angles(np.zeros((0)), np.zeros((0)), np.zeros((0)),
                                           np.ones((self.mux.shape[0], 2),
