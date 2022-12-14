@@ -1417,7 +1417,7 @@ class Atmosphere:
             self.mux = np.sqrt(1.0 - self.muz**2)
             # self.mux[:self.Nrays // 2,:] *= -1
             self.mux[:,0] *= -1
-            self.wmu /= np.sum(self.wmu)
+            # self.wmu /= np.sum(self.wmu)
         else:
             with open(get_data_path() + 'Quadratures.pickle', 'rb') as pkl:
                 quads = pickle.load(pkl)

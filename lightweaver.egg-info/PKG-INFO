@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: lightweaver
-Version: 0.8.1.dev13+g35b99ae.d20221213
+Version: 0.8.1.dev14+g55235de.d20221214
 Summary: Non-LTE Radiative Transfer Framework in Python
 Home-page: http://github.com/Goobley/Lightweaver
 Author: Chris Osborne
