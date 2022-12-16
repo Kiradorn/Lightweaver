@@ -1398,26 +1398,24 @@ class Atmosphere:
                     self.muz = np.ascontiguousarray(np.array([-x,x]).T)
                     self.wmu = np.ascontiguousarray(np.array([w,w]).T)
                     
-                    # self.muz = np.ascontiguousarray(np.tile(np.tile(x,2),(2,1)).T*[-1,1])
-                    # self.wmu = np.ascontiguousarray(np.tile(np.tile(w,2),(2,1)).T)
                 else:
                     raise ValueError('Unsupported Nrays=%d' % Nrays)
             elif Nrays is not None and mu is not None:
+                if not np.all(mu > 0.):
+                    raise ValueError('all mu must be defined positive')
                 if wmu is None:
                     raise ValueError('Must provide wmu when providing mu')
                 if Nrays != len(mu):
                     raise ValueError('mu must be Nrays long if Nrays is provided')
                 if len(mu) != len(wmu):
                     raise ValueError('mu and wmu must be the same shape')
-
+                
                 self.muz = np.ascontiguousarray(np.array([-mu,mu]).T)
                 self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
 
             self.muy = np.zeros_like(self.muz)
             self.mux = np.sqrt(1.0 - self.muz**2)
-            # self.mux[:self.Nrays // 2,:] *= -1
             self.mux[:,0] *= -1
-            # self.wmu /= np.sum(self.wmu)
         else:
             with open(get_data_path() + 'Quadratures.pickle', 'rb') as pkl:
                 quads = pickle.load(pkl)
@@ -1436,18 +1434,20 @@ class Atmosphere:
                 # x = sin theta cos chi
                 # y = sin theta sin chi
                 # z = cos theta
-                self.mux = np.zeros([Nrays,Nrays])
-                self.mux[:Nrays // 2,:] = np.sin(theta) * np.cos(chi)
-                self.mux[Nrays // 2:,:] = -np.sin(theta) * np.cos(chi)
+                self.mux = np.zeros([Nrays,2])
+                self.mux[:Nrays // 2,1] = np.sin(theta) * np.cos(chi)
+                self.mux[Nrays // 2:,1] = -np.sin(theta) * np.cos(chi)
+                self.mux[:,0] = -self.mux[:,1]
                 self.mux = np.ascontiguousarray(self.mux)
-                self.muz = np.zeros(Nrays)
-                self.muz[:,0] = -np.cos(theta)
-                self.muz[:,1] = np.cos(theta)
+                self.muz = np.zeros([Nrays,2])
+                self.muz[:,0] = -np.tile(np.cos(theta),2)
+                self.muz[:,1] = np.tile(np.cos(theta),2)
                 self.muz = np.ascontiguousarray(self.muz)
-                self.wmu = np.zeros(Nrays)
-                self.wmu[:Nrays // 2,:] = quad[:, 0]
-                self.wmu[Nrays // 2:,:] = quad[:, 0]
-                self.wmu /= np.sum(self.wmu[:,0])
+                self.wmu = np.zeros([Nrays,2])
+                self.wmu[:Nrays // 2,1] = quad[:, 0]
+                self.wmu[Nrays // 2:,1] = quad[:, 0]
+                self.wmu[:,1] /= np.sum(self.wmu[:,1])
+                self.wmu[:,0] = self.wmu[:,1]
                 self.muy = np.sqrt(1.0 - (self.mux**2 + self.muz**2))
                 self.muy = np.ascontiguousarray(self.muy)
 
@@ -1464,10 +1464,10 @@ class Atmosphere:
 
 
     def rays(self, muz: Union[float, Sequence[float]],
+             wmu: Union[float, Sequence[float]]=None,
              mux: Optional[Union[float, Sequence[float]]]=None,
              muy: Optional[Union[float, Sequence[float]]]=None,
-             wmu: Optional[Union[float, Sequence[float]]]=None,
-             upOnly: bool=False):
+             upOnly: bool=False, quadSymm: bool = True):
         '''
         Set up the rays on the Atmosphere for computing the intensity in a
         particular direction (or set of directions).
@@ -1482,15 +1482,15 @@ class Atmosphere:
 
         Parameters
         ----------
-        muz : float or sequence of float, optional
+        muz : float or sequence of float
             The angular projections along the z axis.
+        wmu : float or sequence of float
+            The integration weights for the given ray if J is to be
+            integrated for angle set.
         mux : float or sequence of float, optional
             The angular projections along the x axis.
         muy : float or sequence of float, optional
             The angular projections along the y axis.
-        wmu : float or sequence of float, optional
-            The integration weights for the given ray if J is to be
-            integrated for angle set.
         upOnly : bool, optional
             Whether to only configure boundary conditions for up-only rays.
             (default: False)
@@ -1501,8 +1501,7 @@ class Atmosphere:
             if the angular projections or integration weights are incorrectly
             normalised.
         '''
-
-        self.quadSymm = True
+        self.quadSymm = quadSymm
 
         if isinstance(muz, float):
             muz = [muz]
@@ -1511,63 +1510,71 @@ class Atmosphere:
         if isinstance(muy, float):
             muy = [muy]
 
-        if mux is None and muy is None:
-            self.muz = np.array(muz)
-            self.wmu = np.zeros_like(self.muz)
-            self.muy = np.zeros_like(self.muz)
-            self.mux = np.sqrt(1.0 - self.muz**2)
-        elif muy is None:
-            self.muz = np.array(muz)
-            self.wmu = np.zeros_like(self.muz)
-            self.mux = np.array(mux)
-            self.muy = np.sqrt(1.0 - (self.muz**2 + self.mux**2))
-        elif mux is None:
-            self.muz = np.array(muz)
-            self.wmu = np.zeros_like(self.muz)
-            self.muy = np.array(muy)
-            self.mux = np.sqrt(1.0 - (self.muz**2 + self.muy**2))
+        if self.quadSymm:
+            if not ((np.all(muz >= 0)) or (np.all(mux >= 0)) or (np.all(muy >= 0))):
+                raise ValueError("If quadSymm = True (Default), mux, muy, and muz must all be >=0. Set quadSymm = False to provide non z-symmetric quadratures.")
+
+            if self.Ndim == 2:
+                if mux is not None:
+                    mux = np.append(mux,-mux)
+                if muy is not None:
+                    muy = np.append(muy,muy)
+                if muz is not None:
+                    muz = np.append(muz,muz)
+                if wmu is not None:
+                    wmu = np.append(wmu,wmu)/2. # NOTE(jmj): wmus need to add to 2.0 at this point
+
+            if mux is None and muy is None:
+                self.muz = np.ascontiguousarray(np.array([-muz,muz]).T)
+                self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
+                self.muy = np.zeros_like(self.muz)
+                self.mux = np.sqrt(1.0 - self.muz**2)
+                self.mux[:,0] *= -1
+            elif muy is None:
+                self.muz = np.ascontiguousarray(np.array([-muz,muz]).T)
+                self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
+                self.mux = np.ascontiguousarray(np.array([-mux,mux]).T)
+                self.muy = np.sqrt(1.0 - (self.muz**2 + self.mux**2))
+            elif mux is None:
+                self.muz = np.ascontiguousarray(np.array([-muz,muz]).T)
+                self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
+                self.muy = np.ascontiguousarray(np.array([muy,muy]).T)
+                self.mux = np.sqrt(1.0 - (self.muz**2 + self.muy**2))
+                self.mux[:,0] *= -1
+            else:
+                self.muz = np.ascontiguousarray(np.array([-muz,muz]).T)
+                self.mux = np.ascontiguousarray(np.array([-mux,mux]).T)
+                self.muy = np.ascontiguousarray(np.array([muy,muy]).T)
+                self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
+
+                if not np.allclose(self.muz**2 + self.mux**2 + self.muy**2, 1):
+                    raise ValueError('mux**2 + muy**2 + muz**2 != 1.0')
         else:
-            self.muz = np.array(muz)
-            self.mux = np.array(mux)
-            self.muy = np.array(muy)
-            self.wmu = np.zeros_like(muz)
-
-            if not np.allclose(self.muz**2 + self.mux**2 + self.muy**2, 1):
-                raise ValueError('mux**2 + muy**2 + muz**2 != 1.0')
-
-        if not np.all(self.muz > 0):
-            self.quadSymm = False
+            if None in [any(mux), any(muy), any(muz)]:
+                raise ValueError('For quadSymm = False, all components of mu need to be specified')
             print('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
-            # log.info('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
             # raise ValueError('muz must be > 0') #No longer want this to kill program since we want to allow quadrature to be set on entire sphere not just hemisphere.
-            print('Ordering mu angles for upDown compliance')
-            # log.info('Ordering mu angles for upDown compliance') # NOTE(jmj): upDown is structured [down,up] where up is positive muz
 
-            muz1Sorted = np.argsort(self.muz[self.muz>0])
-            muz2Sorted = np.argsort(self.muz[self.muz<0])
-            muz1 = self.muz[self.muz>0][muz1Sorted]
-            muz2 = self.muz[self.muz<0][np.flip(muz2Sorted)]
-            mux1 = self.mux[self.muz>0][muz1Sorted]
-            mux2 = self.mux[self.muz<0][np.flip(muz2Sorted)]
-            muy1 = self.muy[self.muz>0][muz1Sorted]
-            muy2 = self.muy[self.muz<0][np.flip(muz2Sorted)]
 
-            self.muz = np.ascontiguousarray(np.append(muz1,muz2))
-            self.mux = np.ascontiguousarray(np.append(mux1,mux2))
-            self.muy = np.ascontiguousarray(np.append(muy1,muy2))
+            muzUp = muz[muz>0]
+            muzDown = muz[muz<0]
+            muyUp = muy[muz>0]
+            muyDown = muy[muz<0]
+            muxUp = mux[muz>0]
+            muxDown = mux[muz<0]
 
-            wmu1 = self.wmu[self.muz>0][muz1Sorted]
-            wmu2 = self.wmu[self.muz<0][np.flip(muz2Sorted)]
-            self.wmu = np.ascontiguousarray(np.append(wmu1,wmu2))
+            self.muz = np.ascontiguousarray(np.array([muzDown,muzUp]).T)
+            self.mux = np.ascontiguousarray(np.array([muxDown,muxUp]).T)
+            self.muy = np.ascontiguousarray(np.array([muyDown,muyUp]).T)
 
-        else:
-            if wmu is not None:
-                self.wmu = np.array(wmu)
+            wmuUp = wmu[muz>0]
+            wmuDown = wmu[muz<0]
+            self.wmu = np.ascontiguousarray(np.array([wmuDown,wmuUp]).T)
+            self.wmu /= np.sum(self.wmu)/2.
             
 
-            if not np.isclose(self.wmu.sum(), 1.0):
-                raise ValueError('sum of wmus is not 1.0')
-
+        if not np.isclose(self.wmu.sum(), 2.0):
+            raise ValueError('Sum of wmus is not 2.0. (wmu values are internally halved for upDown compliance)')
         
         self.configure_bcs(upOnly=upOnly)
 
@@ -1600,121 +1607,53 @@ class Atmosphere:
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         indexVector[:, 1] = np.arange(muxShape)
 
-        if self.quadSymm:    
-            self.zLowerBc.set_required_angles(mux[:,1], muy[:,1], muz[:,1], indexVector)
-        else:
-            self.zLowerBc.set_required_angles(mux[muxShape:], muy[muxShape:], muz[muxShape:], indexVector)
+        self.zLowerBc.set_required_angles(mux[:,1], muy[:,1], muz[:,1], indexVector)
 
-        print(self.zLowerBc.mux)
-        print(self.zLowerBc.muy)
-        print(self.zLowerBc.muz)
-        print('zLowerBc: ', self.zLowerBc.indexVector)
+        # print(self.zLowerBc.mux)
+        # print(self.zLowerBc.muy)
+        # print(self.zLowerBc.muz)
+        # print('zLowerBc: ', self.zLowerBc.indexVector)
 
-        toObsRange = [0, 1]
-        if upOnly:
-            toObsRange = [1]
+        # toObsRange = [0, 1]
+        # if upOnly:
+        #     toObsRange = [1]
         
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         if not upOnly:
             indexVector[:, 0] = np.arange(muxShape)
         
-        if self.quadSymm == True:
-            self.zUpperBc.set_required_angles(mux[:,0], muy[:,0], muz[:,0], indexVector)
-        else:
-            self.zUpperBc.set_required_angles(mux[:muxShape], muy[:muxShape], muz[:muxShape], indexVector)
+        self.zUpperBc.set_required_angles(mux[:,0], muy[:,0], muz[:,0], indexVector)
 
-        print(self.zUpperBc.mux)
-        print(self.zUpperBc.muy)
-        print(self.zUpperBc.muz)
-        print('zUpperBc: ', self.zUpperBc.indexVector)
+        # print(self.zUpperBc.mux)
+        # print(self.zUpperBc.muy)
+        # print(self.zUpperBc.muz)
+        # print('zUpperBc: ', self.zUpperBc.indexVector)
 
-        
-        mux, muy, muz = [] , [] , []
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
-        count = 0
-        musDone = np.zeros(muxShape, dtype=np.bool_)
-        for mu in range(muxShape):
-            if self.quadSymm:
-                for equalMu in np.argwhere(np.isclose(abs(self.muz), abs(self.muz[mu]))).reshape(-1)[::-1]:
-                    if musDone[equalMu]:
-                        continue
-                    musDone[equalMu] = True
-
-                    for toObsI in toObsRange:
-                        if self.mux[equalMu,toObsI] > 0:
-                            mux.append(self.mux[equalMu,toObsI])
-                            muy.append(self.muy[equalMu,toObsI])
-                            muz.append(self.muz[equalMu,toObsI])
-                            indexVector[equalMu, toObsI] = count
-                            count += 1
-                if np.all(musDone):
-                    break
-            else:
-                for equalMu in np.argwhere(np.isclose(abs(self.muz[self.mux>0]), abs(self.muz[self.mux>0][mu]))).reshape(-1)[::-1]:
-                    if musDone[equalMu]:
-                        continue
-                    musDone[equalMu] = True
-                    for toObsI in toObsRange:
-                        sign = [-1, 1][toObsI]
-                        if ((sign<0)==(self.muz[self.mux>0][equalMu]<0)):
-                            mux.append(self.mux[self.mux>0][equalMu])
-                            muy.append(self.muy[self.mux>0][equalMu])
-                            muz.append(self.muz[self.mux>0][equalMu])
-                            indexVector[equalMu, toObsI] = count
-                            count += 1
-                if np.all(musDone):
-                    break
+        mux = self.mux[self.mux>0]
+        muy = self.muy[self.mux>0]
+        muz = self.muz[self.mux>0]
+        indexVector[self.mux>0] = np.squeeze(np.argwhere(self.muz[self.mux>0]))
 
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
         
-        print(self.xLowerBc.mux)
-        print(self.xLowerBc.muy)
-        print(self.xLowerBc.muz)
-        print('xLowerBc: ', self.xLowerBc.indexVector)
+        # print(self.xLowerBc.mux)
+        # print(self.xLowerBc.muy)
+        # print(self.xLowerBc.muz)
+        # print('xLowerBc: ', self.xLowerBc.indexVector)
 
-        mux, muy, muz = [] , [] , []
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
-        count = 0
-        musDone = np.zeros(muxShape, dtype=np.bool_)
-        for mu in range(muxShape):
-            if self.quadSymm:
-                for equalMu in np.argwhere(np.isclose(abs(self.muz), abs(self.muz[mu]))).reshape(-1):
-                    if musDone[equalMu]:
-                        continue
-                    musDone[equalMu] = True
-
-                    for toObsI in toObsRange:
-                        if self.mux[equalMu,toObsI] < 0:
-                            mux.append(self.mux[equalMu,toObsI])
-                            muy.append(self.muy[equalMu,toObsI])
-                            muz.append(self.muz[equalMu,toObsI])
-                            indexVector[equalMu, toObsI] = count
-                            count += 1
-                if np.all(musDone):
-                    break
-            else:
-                for equalMu in np.argwhere(np.isclose(abs(self.muz[self.mux<0]), abs(self.muz[self.mux<0][mu]))).reshape(-1):
-                    if musDone[equalMu]:
-                        continue
-                    musDone[equalMu] = True
-                    for toObsI in toObsRange:
-                        sign = [-1, 1][toObsI]
-                        if ((sign>0)==(self.muz[equalMu]>0)):
-                            mux.append(self.mux[equalMu])
-                            muy.append(self.muy[equalMu])
-                            muz.append(self.muz[equalMu])
-                            indexVector[equalMu, toObsI] = count
-                            count += 1
-                if np.all(musDone):
-                    break
-
+        mux = self.mux[self.mux<0]
+        muy = self.muy[self.mux<0]
+        muz = self.muz[self.mux<0]
+        indexVector[self.mux<0] = np.squeeze(np.argwhere(self.muz[self.mux<0]))
 
         self.xUpperBc.set_required_angles(mux, muy, muz, indexVector)
 
-        print(self.xUpperBc.mux)
-        print(self.xUpperBc.muy)
-        print(self.xUpperBc.muz)
-        print('xUpperBc: ', self.xUpperBc.indexVector)
+        # print(self.xUpperBc.mux)
+        # print(self.xUpperBc.muy)
+        # print(self.xUpperBc.muz)
+        # print('xUpperBc: ', self.xUpperBc.indexVector)
 
         self.yLowerBc.set_required_angles(np.zeros((0)), np.zeros((0)), np.zeros((0)),
                                           np.ones((self.mux.shape[0], 2),

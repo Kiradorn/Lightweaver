@@ -457,8 +457,8 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     // // !toObs is the opposite of the toObs ray.
     // f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
 
-    f64 muz = If toObs Then atmos->muz(mu, 1) Else atmos->muz(mu, 0) End;
-    f64 mux = If toObs Then atmos->mux(mu, 1) Else atmos->mux(mu, 0) End;
+    f64 muz = atmos->muz(mu, (int)toObs);
+    f64 mux = atmos->mux(mu, (int)toObs);
 
 
     // NOTE(cmo): As always, assume toObs
@@ -767,8 +767,8 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     // // !toObs is the opposite of the toObs ray.
     // f64 mux = If toObs Then atmos->mux(mu) Else -atmos->mux(mu) End;
 
-    f64 muz = If toObs Then atmos->muz(mu, 1) Else atmos->muz(mu, 0) End;
-    f64 mux = If toObs Then atmos->mux(mu, 1) Else atmos->mux(mu, 0) End;
+    f64 muz = atmos->muz(mu, (int)toObs);
+    f64 mux = atmos->mux(mu, (int)toObs);
 
 
     // NOTE(cmo): As always, assume toObs

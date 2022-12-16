@@ -477,14 +477,15 @@ void piecewise_linear_1d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
-    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
-        toObsI = 0;
     }
+
+    int toObsI = int(toObs);
     f64 zmu = abs(0.5 / atmos->muz(mu,toObsI));
+    // Absoulte value implemented after switch to 2D quadratures for asymmetry. zmu assumed to be positive.
     f64 dtau_uw = zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;
@@ -545,15 +546,15 @@ void piecewise_bezier3_1d(FormalData* fd, int la, int mu, bool toObs, const F64V
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
-    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
-        toObsI = 0;
     }
     
-    f64 zmu = 1.0 / atmos->muz(mu,toObsI);
+    int toObsI = int(toObs);
+    f64 zmu = abs(1.0 / atmos->muz(mu,toObsI));
+    // Absoulte value implemented after switch to 2D quadratures for asymmetry. zmu assumed to be positive.
     f64 dtau_uw = 0.5 * zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;
@@ -616,15 +617,15 @@ void piecewise_besser_1d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
 
     int dk = -1;
     int kStart = atmos->Nspace - 1;
-    int toObsI = 1;
     if (!toObs)
     {
         dk = 1;
         kStart = 0;
-        toObsI = 0;
     }
 
-    f64 zmu = 1.0 / atmos->muz(mu, toObsI);
+    int toObsI = int(toObs);
+    f64 zmu = abs(1.0 / atmos->muz(mu, toObsI));
+    // Absoulte value implemented after switch to 2D quadratures for asymmetry. zmu assumed to be positive.
     f64 dtau_uw = 0.5 * zmu * (chi(kStart) + chi(kStart + dk)) * abs(height(kStart) - height(kStart + dk));
 
     f64 Iupw = 0.0;
