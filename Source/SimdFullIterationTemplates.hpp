@@ -303,6 +303,9 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
     {
         for (int toObsI = toObsStart; toObsI < toObsEnd; toObsI += 1)
         {
+            if (mux(mu,toObsI) == 0.0 && muy(mu,toObsI) == 0.0 && muz(mu,toObsI) == 0.0)
+                continue;
+            
             bool toObs = (bool)toObsI;
             if (!continuaOnly || (continuaOnly && (mu == 0 && toObsI == toObsStart)))
             {
@@ -389,6 +392,10 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                     printf("Unexpected Ndim!\n");
                     assert(false);
             }
+            
+            // if (atmos.wmu(mu, toObsI) != 0){
+            //     break;
+            // }
 
             if (updateJ)
             {
