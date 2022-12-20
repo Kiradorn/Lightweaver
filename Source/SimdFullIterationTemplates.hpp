@@ -393,9 +393,9 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                     assert(false);
             }
             
-            // if (atmos.wmu(mu, toObsI) != 0){
-            //     break;
-            // }
+            if (atmos.wmu(mu, toObsI) == 0)
+                continue;
+            
 
             if (updateJ)
             {
