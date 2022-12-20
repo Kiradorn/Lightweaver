@@ -303,7 +303,7 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
     {
         for (int toObsI = toObsStart; toObsI < toObsEnd; toObsI += 1)
         {
-            if (mux(mu,toObsI) == 0.0 && muy(mu,toObsI) == 0.0 && muz(mu,toObsI) == 0.0)
+            if (atmos.mux(mu,toObsI) == 0.0 && atmos.muy(mu,toObsI) == 0.0 && atmos.muz(mu,toObsI) == 0.0)
                 continue;
             
             bool toObs = (bool)toObsI;
