@@ -3,8 +3,13 @@ from typing import TYPE_CHECKING, Optional, Type
 
 from .iteration_update import IterationUpdate
 
+import logging
+log  = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from . import Context
+
+
 
 class ConvergenceCriteria:
     '''
@@ -57,6 +62,7 @@ class DefaultConvergenceCriteria(ConvergenceCriteria):
     '''
 
     def __init__(self, ctx: 'Context', JTol: float, popsTol: float, rhoTol: Optional[float]):
+        # self.log = lwLog.buildlog(self.__name__)
         self.ctx = ctx
         self.JTol = JTol
         self.popsTol = popsTol
@@ -155,57 +161,60 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     conv = convergence(ctx, JTol, popsTol, rhoTol)
 
     for it in range(NmaxIter):
-        JUpdate : IterationUpdate = ctx.formal_sol_gamma_matrices()
+        
         if (not quiet and
             (alwaysPrint or ((now := time.time()) >= prevPrint + printInterval))):
             printNow = True
             if not alwaysPrint:
                 prevPrint = now
 
-        if not quiet and printNow:
-            print(f'-- Iteration {it}:')
-            print(JUpdate.compact_representation())
+        JUpdate : IterationUpdate = ctx.formal_sol_gamma_matrices()
 
         if it < Nscatter:
-            if not quiet and printNow:
-                print('    (Lambda iterating background)')
+            if printNow:
+                log.info('\n'+'    (Lambda iterating background)')
             # NOTE(cmo): reset print state
             printNow = False
             continue
-
+        
         popsUpdate : IterationUpdate = ctx.stat_equil()
-        if not quiet and printNow:
-            print(popsUpdate.compact_representation())
-
+        
         dRhoUpdate : Optional[IterationUpdate]
+
         if prd:
             dRhoUpdate = ctx.prd_redistribute(maxIter=maxPrdSubIter, tol=prdIterTol)
-            if not quiet and printNow and dRhoUpdate is not None:
-                print(dRhoUpdate.compact_representation())
         else:
             dRhoUpdate = None
+
+        if printNow:
+            StringToLog = f'-- Iteration {it}:'
+            StringToLog+='\n' + JUpdate.compact_representation()
+            StringToLog+='\n' + popsUpdate.compact_representation()
+            if dRhoUpdate is not None:
+                StringToLog+='\n' + dRhoUpdate.compact_representation()
+            log.info('\n' + StringToLog)
 
         terminate = conv.is_converged(JUpdate, popsUpdate, dRhoUpdate)
 
         if terminate:
-            if not quiet:
-                endTime = time.time()
-                duration = endTime - startTime
-                line = '-' * 80
-                if printNow:
-                    print('Final Iteration shown above.')
-                else:
-                    print(line)
-                    print(f'Final Iteration: {it}')
-                    print(line)
-                    print(JUpdate.compact_representation())
-                    print(popsUpdate.compact_representation())
-                    if prd and dRhoUpdate is not None:
-                        print(dRhoUpdate.compact_representation())
-                print(line)
-                print(f'Context converged to statistical equilibrium in {it}'
-                      f' iterations after {duration:.2f} s.')
-                print(line)
+            endTime = time.time()
+            duration = endTime - startTime
+            line = '-' * 80
+            if printNow:
+                log.info('Final Iteration shown above.')
+            else:
+                StringToLog = line 
+                StringToLog += '\n' + f'Final Iteration: {it}'
+                StringToLog += '\n' + line
+                StringToLog += '\n' + JUpdate.compact_representation()
+                StringToLog += '\n' + popsUpdate.compact_representation()
+                if prd and dRhoUpdate is not None:
+                    StringToLog += '\n' + dRhoUpdate.compact_representation()
+            StringToLog += '\n' + line
+            StringToLog += '\n' + f'Context converged to statistical equilibrium in {it}' + f' iterations after {duration:.2f} s.'
+            StringToLog +='\n' + line
+            log.info('\n' + StringToLog)
+
             if returnFinalConvergence:
                 finalConvergence = [JUpdate, popsUpdate]
                 if prd and dRhoUpdate is not None:
@@ -217,25 +226,29 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         # NOTE(cmo): reset print state
         printNow = False
     else:
-        if not quiet:
-            line = '-' * 80
-            endTime = time.time()
-            duration = endTime - startTime
-            print(line)
-            print(f'Final Iteration: {it}')
-            print(line)
-            print(JUpdate.compact_representation())
-            print(popsUpdate.compact_representation())
+        endTime = time.time()
+        duration = endTime - startTime
+        line = '-' * 80
+        if printNow:
+            log.info('Final Iteration shown above.')
+        else:
+            StringToLog = line 
+            StringToLog += '\n' + f'Final Iteration: {it}'
+            StringToLog += '\n' + line
+            StringToLog += '\n' + JUpdate.compact_representation()
+            StringToLog += '\n' + popsUpdate.compact_representation()
             if prd and dRhoUpdate is not None:
-                print(dRhoUpdate.compact_representation())
-            print(line)
-            print(f'Context FAILED to converge to statistical equilibrium after {it}'
-                  f' iterations (took {duration:.2f} s).')
-            print(line)
+                StringToLog += '\n' + dRhoUpdate.compact_representation()
+        StringToLog += '\n' + line
+        StringToLog += '\n' + f'Context converged to statistical equilibrium in {it}' + f' iterations after {duration:.2f} s.'
+        StringToLog +='\n' + line
+        log.info('\n' + StringToLog)
+
         if returnFinalConvergence:
             finalConvergence = [JUpdate, popsUpdate]
             if prd and dRhoUpdate is not None:
                 finalConvergence.append(dRhoUpdate)
+
             return it, finalConvergence
         else:
             return it
