@@ -1454,10 +1454,10 @@ class Atmosphere:
             else:
                 raise NotImplementedError()
 
-        print(self.mux)
-        print(self.muy)
-        print(self.muz)
-        print(self.wmu)
+        # print(self.mux)
+        # print(self.muy)
+        # print(self.muz)
+        # print(self.wmu)
         
         self.quadSymm = True # NOTE(jmj): Assume that quadrature from leggaus and the shipped default tables is symmetric about z axis
         self.configure_bcs()
