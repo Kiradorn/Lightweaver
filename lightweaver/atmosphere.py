@@ -1555,13 +1555,23 @@ class Atmosphere:
             print('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
             # raise ValueError('muz must be > 0') #No longer want this to kill program since we want to allow quadrature to be set on entire sphere not just hemisphere.
 
-
             muzUp = muz[muz>0]
             muzDown = muz[muz<0]
+            
+            lengths = np.array([muzDown.shape[0],muzUp.shape[0]])
+            lengthdiff = abs(lengths-lengths.max())
+
+            muzUp = np.pad(muzUp,(0,lengthdiff[1]),constant_values = 0)
+            muzDown = np.pad(muzDown,(0,lengthdiff[0]),constant_values = 0)
+            
             muyUp = muy[muz>0]
             muyDown = muy[muz<0]
+            muyUp = np.pad(muyUp,(0,lengthdiff[1]),constant_values = 0)
+            muyDown = np.pad(muyDown,(0,lengthdiff[0]),constant_values = 0)
             muxUp = mux[muz>0]
             muxDown = mux[muz<0]
+            muxUp = np.pad(muxUp,(0,lengthdiff[1]),constant_values = 0)
+            muxDown = np.pad(muxDown,(0,lengthdiff[0]),constant_values = 0)
 
             self.muz = np.ascontiguousarray(np.array([muzDown,muzUp]).T)
             self.mux = np.ascontiguousarray(np.array([muxDown,muxUp]).T)
@@ -1569,6 +1579,8 @@ class Atmosphere:
 
             wmuUp = wmu[muz>0]
             wmuDown = wmu[muz<0]
+            wmuUp = np.pad(wmuUp,(0,lengthdiff[1]),constant_values = 0)
+            wmuDown = np.pad(wmuDown,(0,lengthdiff[0]),constant_values = 0)
             self.wmu = np.ascontiguousarray(np.array([wmuDown,wmuUp]).T)
             self.wmu /= np.sum(self.wmu)/2.
             
