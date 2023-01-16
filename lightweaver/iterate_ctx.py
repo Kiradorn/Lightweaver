@@ -9,6 +9,9 @@ log  = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from . import Context
 
+import numpy as np
+from copy import copy
+
 
 
 class ConvergenceCriteria:
@@ -94,7 +97,8 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                    maxPrdSubIter: int=3, printInterval: float=0.2,
                    quiet: bool=False,
                    convergence: Optional[Type[ConvergenceCriteria]]=None,
-                   returnFinalConvergence: bool=False):
+                   returnFinalConvergence: bool=False,
+                   oscillateQuadrature: bool=False):
     '''
     Iterate a configured Context towards statistical equilibrium solution.
 
@@ -151,6 +155,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         The final IterationUpdates computed, if requested by `returnFinalConvergence`.
     '''
 
+
     prevPrint = 0.0
     printNow = True
     alwaysPrint = (printInterval == 0.0)
@@ -161,6 +166,16 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     conv = convergence(ctx, JTol, popsTol, rhoTol)
 
     for it in range(NmaxIter):
+        if oscillateQuadrature:
+            if (it > 0 and not it % 10):
+                log.info('Swapping Quadrature')
+                atmosphereFlippedMus = copy(ctx.atmos.pyAtmos)
+                atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
+                atmosphereFlippedMus.muy = -np.flip(ctx.atmos.pyAtmos.muy, axis=1)
+                atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
+                atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
+                ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
+                # log.info(str(ctx.atmos.mux[0,:]) + str(ctx.atmos.muy[0,:]) + str(ctx.atmos.muz[0,:]))
         
         if (not quiet and
             (alwaysPrint or ((now := time.time()) >= prevPrint + printInterval))):
