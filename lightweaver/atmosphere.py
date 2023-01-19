@@ -1463,10 +1463,10 @@ class Atmosphere:
         self.configure_bcs()
 
 
-    def rays(self, muz: Union[float, Sequence[float]],
-             wmu: Union[float, Sequence[float]]=None,
-             mux: Optional[Union[float, Sequence[float]]]=None,
-             muy: Optional[Union[float, Sequence[float]]]=None,
+    def rays(self, muz: Union[float, Sequence[float], np.ndarray],
+             wmu: Optional[Union[float, Sequence[float], np.ndarray]]=None,
+             mux: Optional[Union[float, Sequence[float], np.ndarray]]=None,
+             muy: Optional[Union[float, Sequence[float], np.ndarray]]=None,
              upOnly: bool=False, quadSymm: bool = True):
         '''
         Set up the rays on the Atmosphere for computing the intensity in a
@@ -1504,14 +1504,24 @@ class Atmosphere:
         self.quadSymm = quadSymm
 
         if isinstance(muz, float):
-            muz = [muz]
+            muz = np.array([muz])
+        elif isinstance(muz, list):
+            muz = np.array(muz)
         if isinstance(mux, float):
-            mux = [mux]
+            mux = np.array([mux])
+        elif isinstance(mux, list):
+            mux = np.array(mux)
         if isinstance(muy, float):
-            muy = [muy]
+            muy = np.array([muy])
+        elif isinstance(muy, list):
+            muy = np.array(muy)
+        if isinstance(wmu, float):
+            wmu = np.array([wmu])
+        elif isinstance(wmu, list):
+            wmu = np.array(wmu)
 
         if self.quadSymm:
-            if not ((np.all(muz >= 0)) or (np.all(mux >= 0)) or (np.all(muy >= 0))):
+            if not ((np.all(muz >= [0])) or (np.all(mux >= [0])) or (np.all(muy >= [0]))):
                 raise ValueError("If quadSymm = True (Default), mux, muy, and muz must all be >=0. Set quadSymm = False to provide non z-symmetric quadratures.")
 
             if self.Ndim == 2:
@@ -1549,9 +1559,14 @@ class Atmosphere:
 
                 if not np.allclose(self.muz**2 + self.mux**2 + self.muy**2, 1):
                     raise ValueError('mux**2 + muy**2 + muz**2 != 1.0')
+                
+            if None in self.wmu:
+                self.wmu = np.zeros_like(self.muz)
+            elif not np.isclose(self.wmu.sum(), 2.0):
+                raise ValueError('Sum of wmus is not 2.0. (wmu values are internally halved for upDown compliance)')
         else:
-            if None in [any(mux), any(muy), any(muz)]:
-                raise ValueError('For quadSymm = False, all components of mu need to be specified')
+            if any([np.any(mux == None), np.any(muy == None), np.any(muz == None), np.any(wmu == None)]):
+                raise ValueError('For quadSymm = False, all components of mu need to be specified, including wmu.')
             print('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
             # raise ValueError('muz must be > 0') #No longer want this to kill program since we want to allow quadrature to be set on entire sphere not just hemisphere.
 
@@ -1583,11 +1598,11 @@ class Atmosphere:
             wmuDown = np.pad(wmuDown,(0,lengthdiff[0]),constant_values = 0)
             self.wmu = np.ascontiguousarray(np.array([wmuDown,wmuUp]).T)
             self.wmu /= np.sum(self.wmu)/2.
-            
 
-        if not np.isclose(self.wmu.sum(), 2.0):
-            raise ValueError('Sum of wmus is not 2.0. (wmu values are internally halved for upDown compliance)')
-        
+            if not np.isclose(self.wmu.sum(), 2.0):
+                raise ValueError('Sum of wmus is not 2.0. (wmu values are internally halved for upDown compliance)')
+            
+            
         self.configure_bcs(upOnly=upOnly)
 
     def configure_bcs(self, upOnly: bool=False):

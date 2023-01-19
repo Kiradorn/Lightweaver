@@ -875,6 +875,7 @@ cdef class LwAtmosphere:
         state['Nx'] = self.Nx
         state['Ny'] = self.Ny
         state['Nz'] = self.Nz
+        state['quadSymm'] = self.quadSymm
 
         return state
 

@@ -98,7 +98,8 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                    quiet: bool=False,
                    convergence: Optional[Type[ConvergenceCriteria]]=None,
                    returnFinalConvergence: bool=False,
-                   oscillateQuadrature: bool=False):
+                   oscillateQuadrature: bool=False,
+                   oscillateFrequency: int=10):
     '''
     Iterate a configured Context towards statistical equilibrium solution.
 
@@ -167,7 +168,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
 
     for it in range(NmaxIter):
         if oscillateQuadrature:
-            if (it > 0 and not it % 10):
+            if (it > 50 and not it % oscillateFrequency):
                 log.info('Swapping Quadrature')
                 atmosphereFlippedMus = copy(ctx.atmos.pyAtmos)
                 atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
