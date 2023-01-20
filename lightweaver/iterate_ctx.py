@@ -99,6 +99,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                    convergence: Optional[Type[ConvergenceCriteria]]=None,
                    returnFinalConvergence: bool=False,
                    oscillateQuadrature: bool=False,
+                   oscillateStart: int = 0,
                    oscillateFrequency: int=10):
     '''
     Iterate a configured Context towards statistical equilibrium solution.
@@ -168,13 +169,14 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
 
     for it in range(NmaxIter):
         if oscillateQuadrature:
-            if (it > 50 and not it % oscillateFrequency):
+            if (it > oscillateStart and not it % oscillateFrequency):
                 log.info('Swapping Quadrature')
                 atmosphereFlippedMus = copy(ctx.atmos.pyAtmos)
                 atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
                 atmosphereFlippedMus.muy = -np.flip(ctx.atmos.pyAtmos.muy, axis=1)
                 atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
                 atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
+                atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
                 # log.info(str(ctx.atmos.mux[0,:]) + str(ctx.atmos.muy[0,:]) + str(ctx.atmos.muz[0,:]))
         
