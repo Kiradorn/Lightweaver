@@ -1570,6 +1570,8 @@ class Atmosphere:
             print('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
             # raise ValueError('muz must be > 0') #No longer want this to kill program since we want to allow quadrature to be set on entire sphere not just hemisphere.
 
+            #In general, there has to be as many rays going up as going down. In fact, there has to be as many in the upwards as downwards x too.
+
             #Will definitely need to rethink this once 3D becomes a thing
             top_left = (muz<0) & (mux<0)
             top_right = (muz>0) & (mux>0)
@@ -1579,33 +1581,58 @@ class Atmosphere:
             lengths = np.array([muz[top_left].shape[0],muz[top_right].shape[0]])
             lengthdiff = abs(lengths-lengths.max())
 
-            #Added in specific non zero mu angles to ensure > and < operators don't hit edge cases
-            muzTL = np.pad(muz[top_left],(0,lengthdiff[0]),constant_values = -0.95)
-            muzTR = np.pad(muz[top_right],(0,lengthdiff[1]),constant_values = 0.95)
-            muxTL = np.pad(mux[top_left],(0,lengthdiff[0]),constant_values = -np.sqrt(1.0 - 0.95**2))
-            muxTR = np.pad(mux[top_right],(0,lengthdiff[1]),constant_values = np.sqrt(1.0 - 0.95**2))
-            muyTL = np.pad(muy[top_left],(0,lengthdiff[0]),constant_values = 0)
-            muyTR = np.pad(muy[top_right],(0,lengthdiff[1]),constant_values = 0)
+            #Added in specific non zero mu angles to ensure > and < operators don't hit edge cases. I don't like this.
+            muzTL = np.pad(muz[top_left],(0,lengthdiff[0]),constant_values = -1.1)
+            muzTR = np.pad(muz[top_right],(0,lengthdiff[1]),constant_values = 1.1)
+            muxTL = np.pad(mux[top_left],(0,lengthdiff[0]),constant_values = -1.1)
+            muxTR = np.pad(mux[top_right],(0,lengthdiff[1]),constant_values = 1.1)
+            muyTL = np.pad(muy[top_left],(0,lengthdiff[0]),constant_values = 1.1)
+            muyTR = np.pad(muy[top_right],(0,lengthdiff[1]),constant_values = 1.1)
             wmuTL = np.pad(wmu[top_left],(0,lengthdiff[0]),constant_values = 0)
             wmuTR = np.pad(wmu[top_right],(0,lengthdiff[1]),constant_values = 0)
 
             lengths = np.array([muz[bottom_left].shape[0],muz[bottom_right].shape[0]])
             lengthdiff = abs(lengths-lengths.max())
 
-            muzBL = np.pad(muz[bottom_left],(0,lengthdiff[0]),constant_values = -0.95)
-            muzBR = np.pad(muz[bottom_right],(0,lengthdiff[1]),constant_values = 0.95)
-            muxBL = np.pad(mux[bottom_left],(0,lengthdiff[0]),constant_values = np.sqrt(1.0 - 0.95**2))
-            muxBR = np.pad(mux[bottom_right],(0,lengthdiff[1]),constant_values = -np.sqrt(1.0 - 0.95**2))
-            muyBL = np.pad(muy[bottom_left],(0,lengthdiff[0]),constant_values = 0)
-            muyBR = np.pad(muy[bottom_right],(0,lengthdiff[1]),constant_values = 0)
+            muzBL = np.pad(muz[bottom_left],(0,lengthdiff[0]),constant_values = -1.1)
+            muzBR = np.pad(muz[bottom_right],(0,lengthdiff[1]),constant_values = 1.1)
+            muxBL = np.pad(mux[bottom_left],(0,lengthdiff[0]),constant_values = 1.1)
+            muxBR = np.pad(mux[bottom_right],(0,lengthdiff[1]),constant_values = -1.1)
+            muyBL = np.pad(muy[bottom_left],(0,lengthdiff[0]),constant_values = 1.1)
+            muyBR = np.pad(muy[bottom_right],(0,lengthdiff[1]),constant_values = 1.1)
             wmuBL = np.pad(wmu[bottom_left],(0,lengthdiff[0]),constant_values = 0)
             wmuBR = np.pad(wmu[bottom_right],(0,lengthdiff[1]),constant_values = 0)
+
+            lengths = np.array([muzTL.shape[0],muzBL.shape[0]])
+            lengthdiff = abs(lengths-lengths.max())
+
+            muzTL = np.pad(muzTL,(0,lengthdiff[0]),constant_values = -1.1)
+            muzBL = np.pad(muzBL,(0,lengthdiff[1]),constant_values = -1.1)
+            muxTL = np.pad(muxTL,(0,lengthdiff[0]),constant_values = -1.1)
+            muxBL = np.pad(muxBL,(0,lengthdiff[1]),constant_values = 1.1)
+            muyTL = np.pad(muyTL,(0,lengthdiff[0]),constant_values = 1.1)
+            muyBL = np.pad(muyBL,(0,lengthdiff[1]),constant_values = 1.1)
+            wmuTL = np.pad(wmuTL,(0,lengthdiff[0]),constant_values = 0)
+            wmuBL = np.pad(wmuBL,(0,lengthdiff[1]),constant_values = 0)
+
+            lengths = np.array([muzTR.shape[0],muzBR.shape[0]])
+            lengthdiff = abs(lengths-lengths.max())
+
+            muzTR = np.pad(muzTR,(0,lengthdiff[0]),constant_values = 1.1)
+            muzBR = np.pad(muzBR,(0,lengthdiff[1]),constant_values = 1.1)
+            muxTR = np.pad(muxTR,(0,lengthdiff[0]),constant_values = 1.1)
+            muxBR = np.pad(muxBR,(0,lengthdiff[1]),constant_values = -1.1)
+            muyTR = np.pad(muyTR,(0,lengthdiff[0]),constant_values = 1.1)
+            muyBR = np.pad(muyBR,(0,lengthdiff[1]),constant_values = 1.1)
+            wmuTR = np.pad(wmuTR,(0,lengthdiff[0]),constant_values = 0)
+            wmuBR = np.pad(wmuBR,(0,lengthdiff[1]),constant_values = 0)
 
             self.muz = np.ascontiguousarray(np.vstack((np.append(muzTL,muzBL),np.append(muzTR,muzBR))).T)
             self.mux = np.ascontiguousarray(np.vstack((np.append(muxTL,muxBL),np.append(muxTR,muxBR))).T)
             self.muy = np.ascontiguousarray(np.vstack((np.append(muyTL,muyBL),np.append(muyTR,muyBR))).T)
             self.wmu = np.ascontiguousarray(np.vstack((np.append(wmuTL,wmuBL),np.append(wmuTR,wmuBR))).T)
             self.wmu /= np.sum(self.wmu)/2.
+
 
             if not np.isclose(self.wmu.sum(), 2.0):
                 raise ValueError('Sum of wmus is not 2.0. (wmu values are internally halved for upDown compliance)')
@@ -1625,11 +1652,10 @@ class Atmosphere:
             (default: False)
         '''
 
-
-
         # NOTE(cmo): We always have z-bcs
         # For zLowerBc, muz is positive, and we have all mux, muz
-        mux, muy, muz = self.mux, self.muy, self.muz
+        
+        
         # NOTE(cmo): indexVector is of shape (mu, toObs) to allow the core to
         # easily destructure the blob that will be handed to it from
         # compute_bc.
@@ -1639,6 +1665,10 @@ class Atmosphere:
         else:
             muxShape = self.mux.shape[0]
         
+        mux, muy, muz = self.mux, self.muy, self.muz
+        # mux[abs(self.mux)>1] = 0.
+        # muy[abs(self.muy)>1] = 0.
+        # muz[abs(self.muz)>1] = 0.
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         indexVector[:, 1] = np.arange(muxShape)
 
@@ -1653,6 +1683,10 @@ class Atmosphere:
         # if upOnly:
         #     toObsRange = [1]
         
+        mux, muy, muz = self.mux, self.muy, self.muz
+        # mux[abs(self.mux)>1] = 0.
+        # muy[abs(self.muy)>1] = 0.
+        # muz[abs(self.muz)>1] = 0.
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         if not upOnly:
             indexVector[:, 0] = np.arange(muxShape)
@@ -1666,8 +1700,11 @@ class Atmosphere:
 
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         mux = self.mux[self.mux>0]
-        muy = self.muy[self.mux>0]
-        muz = self.muz[self.mux>0]
+        muy = self.muy[self.muy>0]
+        muz = self.muz[self.muz>0]
+        # mux[abs(mux)>1] = 0.
+        # muy[abs(muy)>1] = 0.
+        # muz[abs(muz)>1] = 0.
         indexVector[self.mux>0] = np.squeeze(np.argwhere(self.muz[self.mux>0]))
 
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
@@ -1679,8 +1716,11 @@ class Atmosphere:
 
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
         mux = self.mux[self.mux<0]
-        muy = self.muy[self.mux<0]
-        muz = self.muz[self.mux<0]
+        muy = self.muy[self.muy<0]
+        muz = self.muz[self.muz<0]
+        # mux[abs(mux)>1] = 0.
+        # muy[abs(muy)>1] = 0.
+        # muz[abs(muz)>1] = 0.
         indexVector[self.mux<0] = np.squeeze(np.argwhere(self.muz[self.mux<0]))
 
         self.xUpperBc.set_required_angles(mux, muy, muz, indexVector)
@@ -1696,6 +1736,10 @@ class Atmosphere:
         self.yUpperBc.set_required_angles(np.zeros((0)), np.zeros((0)), np.zeros((0)),
                                           np.ones((self.mux.shape[0], 2),
                                                   dtype=np.int32) * -1)
+
+        # self.mux[abs(self.mux)>1] = 0.
+        # self.muy[abs(self.muy)>1] = 0.
+        # self.muz[abs(self.muz)>1] = 0.
 
         if self.Ndim > 2:
             raise ValueError('Only <= 2D atmospheres supported currently.')
