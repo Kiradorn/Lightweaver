@@ -1570,33 +1570,41 @@ class Atmosphere:
             print('Not all muz > 0, assuming specified quadrature is defined on entire sphere')
             # raise ValueError('muz must be > 0') #No longer want this to kill program since we want to allow quadrature to be set on entire sphere not just hemisphere.
 
-            muzUp = muz[muz>0]
-            muzDown = muz[muz<0]
-            
-            lengths = np.array([muzDown.shape[0],muzUp.shape[0]])
+            #Will definitely need to rethink this once 3D becomes a thing
+            top_left = (muz<0) & (mux<0)
+            top_right = (muz>0) & (mux>0)
+            bottom_left = (muz<0) & (mux>0)
+            bottom_right = (muz>0) & (mux<0)
+
+            lengths = np.array([muz[top_left].shape[0],muz[top_right].shape[0]])
             lengthdiff = abs(lengths-lengths.max())
 
-            muzUp = np.pad(muzUp,(0,lengthdiff[1]),constant_values = 0)
-            muzDown = np.pad(muzDown,(0,lengthdiff[0]),constant_values = 0)
-            
-            muyUp = muy[muz>0]
-            muyDown = muy[muz<0]
-            muyUp = np.pad(muyUp,(0,lengthdiff[1]),constant_values = 0)
-            muyDown = np.pad(muyDown,(0,lengthdiff[0]),constant_values = 0)
-            muxUp = mux[muz>0]
-            muxDown = mux[muz<0]
-            muxUp = np.pad(muxUp,(0,lengthdiff[1]),constant_values = 0)
-            muxDown = np.pad(muxDown,(0,lengthdiff[0]),constant_values = 0)
+            #Added in specific non zero mu angles to ensure > and < operators don't hit edge cases
+            muzTL = np.pad(muz[top_left],(0,lengthdiff[0]),constant_values = -0.95)
+            muzTR = np.pad(muz[top_right],(0,lengthdiff[1]),constant_values = 0.95)
+            muxTL = np.pad(mux[top_left],(0,lengthdiff[0]),constant_values = -np.sqrt(1.0 - 0.95**2))
+            muxTR = np.pad(mux[top_right],(0,lengthdiff[1]),constant_values = np.sqrt(1.0 - 0.95**2))
+            muyTL = np.pad(muy[top_left],(0,lengthdiff[0]),constant_values = 0)
+            muyTR = np.pad(muy[top_right],(0,lengthdiff[1]),constant_values = 0)
+            wmuTL = np.pad(wmu[top_left],(0,lengthdiff[0]),constant_values = 0)
+            wmuTR = np.pad(wmu[top_right],(0,lengthdiff[1]),constant_values = 0)
 
-            self.muz = np.ascontiguousarray(np.array([muzDown,muzUp]).T)
-            self.mux = np.ascontiguousarray(np.array([muxDown,muxUp]).T)
-            self.muy = np.ascontiguousarray(np.array([muyDown,muyUp]).T)
+            lengths = np.array([muz[bottom_left].shape[0],muz[bottom_right].shape[0]])
+            lengthdiff = abs(lengths-lengths.max())
 
-            wmuUp = wmu[muz>0]
-            wmuDown = wmu[muz<0]
-            wmuUp = np.pad(wmuUp,(0,lengthdiff[1]),constant_values = 0)
-            wmuDown = np.pad(wmuDown,(0,lengthdiff[0]),constant_values = 0)
-            self.wmu = np.ascontiguousarray(np.array([wmuDown,wmuUp]).T)
+            muzBL = np.pad(muz[bottom_left],(0,lengthdiff[0]),constant_values = -0.95)
+            muzBR = np.pad(muz[bottom_right],(0,lengthdiff[1]),constant_values = 0.95)
+            muxBL = np.pad(mux[bottom_left],(0,lengthdiff[0]),constant_values = np.sqrt(1.0 - 0.95**2))
+            muxBR = np.pad(mux[bottom_right],(0,lengthdiff[1]),constant_values = -np.sqrt(1.0 - 0.95**2))
+            muyBL = np.pad(muy[bottom_left],(0,lengthdiff[0]),constant_values = 0)
+            muyBR = np.pad(muy[bottom_right],(0,lengthdiff[1]),constant_values = 0)
+            wmuBL = np.pad(wmu[bottom_left],(0,lengthdiff[0]),constant_values = 0)
+            wmuBR = np.pad(wmu[bottom_right],(0,lengthdiff[1]),constant_values = 0)
+
+            self.muz = np.ascontiguousarray(np.vstack((np.append(muzTL,muzBL),np.append(muzTR,muzBR))).T)
+            self.mux = np.ascontiguousarray(np.vstack((np.append(muxTL,muxBL),np.append(muxTR,muxBR))).T)
+            self.muy = np.ascontiguousarray(np.vstack((np.append(muyTL,muyBL),np.append(muyTR,muyBR))).T)
+            self.wmu = np.ascontiguousarray(np.vstack((np.append(wmuTL,wmuBL),np.append(wmuTR,wmuBR))).T)
             self.wmu /= np.sum(self.wmu)/2.
 
             if not np.isclose(self.wmu.sum(), 2.0):
