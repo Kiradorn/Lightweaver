@@ -180,12 +180,14 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
                 log.info(ctx.atmos.pyAtmos.mux)
-                # log.info(atmosphereFlippedMus.xLowerBc.mux)
-                log.info(atmosphereFlippedMus.xLowerBc.indexVector)
-                # log.info(atmosphereFlippedMus.xUpperBc.mux)
-                log.info(atmosphereFlippedMus.xUpperBc.indexVector)
+                log.info(ctx.atmos.mux)
+                log.info(ctx.atmos.pyAtmos.xLowerBc.mux)
+                log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector)
+                log.info(ctx.atmos.pyAtmos.xUpperBc.mux)
+                log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
                 log.info(ctx.atmos.pyAtmos.mux)
+                log.info(ctx.atmos.mux)
                 log.info(ctx.atmos.pyAtmos.xLowerBc.mux)
                 log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector)
                 log.info(ctx.atmos.pyAtmos.xUpperBc.mux)
