@@ -177,9 +177,19 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
                 atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
                 #A more consistent approach would include the below, but in the flipped case there's no need. This is anyway commented as current method for flagging 
-                #atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
+                atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
+                log.info(atmosphereFlippedMus.mux)
+                log.info(atmosphereFlippedMus.xLowerBc.mux)
+                log.info(atmosphereFlippedMus.xLowerBc.indexVector)
+                log.info(atmosphereFlippedMus.xUpperBc.mux)
+                log.info(atmosphereFlippedMus.xUpperBc.indexVector)
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
+                log.info(ctx.atmos.pyAtmos.mux)
+                log.info(ctx.atmos.pyAtmos.xLowerBc.mux)
+                log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector)
+                log.info(ctx.atmos.pyAtmos.xUpperBc.mux)
+                log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)
         
         if (not quiet and
             (alwaysPrint or ((now := time.time()) >= prevPrint + printInterval))):
