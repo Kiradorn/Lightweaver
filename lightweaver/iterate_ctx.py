@@ -168,9 +168,23 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     conv = convergence(ctx, JTol, popsTol, rhoTol)
 
     for it in range(NmaxIter):
+        if it ==0:
+            log.info(ctx.atmos.pyAtmos.mux) 
+            log.info(ctx.atmos.mux)
+            log.info(ctx.atmos.pyAtmos.xLowerBc.mux)
+            log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector) 
+            log.info(ctx.atmos.pyAtmos.xUpperBc.mux)
+            log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)
         if oscillateQuadrature:
             if (it > oscillateStart and not it % oscillateFrequency):
                 log.info('Swapping Quadrature')
+                log.info(ctx.atmos.pyAtmos.mux) 
+                log.info(ctx.atmos.mux)
+                log.info(ctx.atmos.pyAtmos.xLowerBc.mux)
+                log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector) 
+                log.info(ctx.atmos.pyAtmos.xUpperBc.mux)
+                log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)
+
                 atmosphereFlippedMus = copy(ctx.atmos.pyAtmos)
                 atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
                 atmosphereFlippedMus.muy = -np.flip(ctx.atmos.pyAtmos.muy, axis=1)
@@ -179,12 +193,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 #A more consistent approach would include the below, but in the flipped case there's no need. This is anyway commented as current method for flagging 
                 atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
-                log.info(ctx.atmos.pyAtmos.mux)
-                log.info(ctx.atmos.mux)
-                log.info(ctx.atmos.pyAtmos.xLowerBc.mux)
-                log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector)
-                log.info(ctx.atmos.pyAtmos.xUpperBc.mux)
-                log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)
+
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
                 log.info(ctx.atmos.pyAtmos.mux)
                 log.info(ctx.atmos.mux)
