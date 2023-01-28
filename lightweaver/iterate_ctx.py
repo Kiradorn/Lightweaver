@@ -176,7 +176,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
             # log.info(ctx.atmos.pyAtmos.xUpperBc.mux) # All good
             # log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector) # All good
         if oscillateQuadrature:
-            if (it < Nscatter) or (it > oscillateStart and not it % oscillateFrequency):
+            if (it > oscillateStart and not it % oscillateFrequency):
                 log.info('Swapping Quadrature')
                 # log.info(ctx.atmos.pyAtmos.mux) # Same
                 # log.info(ctx.atmos.mux) # Same
@@ -194,7 +194,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 # #A more consistent approach would include the below, but in the flipped case there's no need. This is anyway commented as current method for flagging 
                 # atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
-                # ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
+                ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
                 # log.info(ctx.atmos.pyAtmos.mux) #Flipped as expected
                 # log.info(ctx.atmos.mux) #Flipped as expected
                 # log.info(ctx.atmos.pyAtmos.xLowerBc.mux) # All good
