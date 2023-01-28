@@ -176,7 +176,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
             # log.info(ctx.atmos.pyAtmos.xUpperBc.mux) # All good
             # log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector) # All good
         if oscillateQuadrature:
-            if (it > oscillateStart and not it % oscillateFrequency):
+            if (it < Nscatter) or (it > oscillateStart and not it % oscillateFrequency):
                 log.info('Swapping Quadrature')
                 # log.info(ctx.atmos.pyAtmos.mux) # Same
                 # log.info(ctx.atmos.mux) # Same
