@@ -3032,24 +3032,22 @@ cdef class LwContext:
         self.setup_threads(self.kwargs['Nthreads'])
 
     def update_quadrature(self, atmos, spect):
-        log.info(self.atmos.mux)
-        log.info(self.atmos.xLowerBc.mux)
-        log.info(self.atmos.muz)
-        log.info(self.atmos.xLowerBc.muz)
-        log.info(self.atmos.xLowerBc.indexVector)
+        log.info(self.pyAtmos.mux)
+        log.info(self.pyAtmos.xLowerBc.mux)
+        log.info(self.pyAtmos.xLowerBc.indexVector)
+        log.info(self.pyAtmos.muz)
+        log.info(self.pyAtmos.xLowerBc.muz)
+        log.info(self.pyAtmos.xLowerBc.indexVector)
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
-        # self.atmos.pyAtmos = atmos
         self.ctx.atmos = &self.atmos.atmos
         
-        log.info(self.atmos.mux)
-        log.info(self.atmos.xLowerBc.mux)
-        log.info(self.atmos.muz)
-        log.info(self.atmos.xLowerBc.muz)
-        log.info(self.atmos.xLowerBc.indexVector)
-
-        # self.atmos.configure_bcs(atmos)
-        # self.atmos.update_projections()
+        log.info(self.pyAtmos.mux)
+        log.info(self.pyAtmos.xLowerBc.mux)
+        log.info(self.pyAtmos.xLowerBc.indexVector)
+        log.info(self.pyAtmos.muz)
+        log.info(self.pyAtmos.xLowerBc.muz)
+        log.info(self.pyAtmos.xLowerBc.indexVector)
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
         '''
