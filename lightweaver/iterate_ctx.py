@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from . import Context
 
 import numpy as np
-from copy import copy
+from copy import copy, deepcopy
 
 
 
@@ -185,7 +185,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 # log.info(ctx.atmos.pyAtmos.xUpperBc.mux)  # All good
                 # log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)  # All good
 
-                atmosphereFlippedMus = copy(ctx.atmos.pyAtmos)
+                atmosphereFlippedMus = deepcopy(ctx.atmos.pyAtmos)
                 atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
                 atmosphereFlippedMus.muy = -np.flip(ctx.atmos.pyAtmos.muy, axis=1)
                 atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
