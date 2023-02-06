@@ -192,7 +192,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
                 
                 # #A more consistent approach would include the below, but in the flipped case there's no need. This is anyway commented as current method for flagging 
-                # atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
+                atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
                 # log.info(ctx.atmos.pyAtmos.mux) #Flipped as expected
