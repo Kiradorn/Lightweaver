@@ -3034,9 +3034,10 @@ cdef class LwContext:
     def update_quadrature(self, atmos, spect):
         log.info(self.ctx.atmos.mux)
         log.info(self.ctx.atmos.xLowerBc.mux)
+        log.info(self.ctx.atmos.xLowerBc.mux.indexVector)
         log.info(self.ctx.atmos.muz)
         log.info(self.ctx.atmos.xLowerBc.muz)
-        log.info(self.ctx.atmos.xLowerBc.indexVector)
+        log.info(self.ctx.atmos.xLowerBc.muz.indexVector)
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
         # self.atmos.pyAtmos = atmos
@@ -3044,9 +3045,10 @@ cdef class LwContext:
         
         log.info(self.ctx.atmos.mux)
         log.info(self.ctx.atmos.xLowerBc.mux)
+        log.info(self.ctx.atmos.xLowerBc.mux.indexVector)
         log.info(self.ctx.atmos.muz)
         log.info(self.ctx.atmos.xLowerBc.muz)
-        log.info(self.ctx.atmos.xLowerBc.indexVector)
+        log.info(self.ctx.atmos.xLowerBc.muz.indexVector)
 
         # self.atmos.configure_bcs(atmos)
         # self.atmos.update_projections()
