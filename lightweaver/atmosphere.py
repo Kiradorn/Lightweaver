@@ -1603,30 +1603,6 @@ class Atmosphere:
             wmuBL = np.pad(wmu[bottom_left],(0,lengthdiff[0]),constant_values = 0)
             wmuBR = np.pad(wmu[bottom_right],(0,lengthdiff[1]),constant_values = 0)
 
-            # lengths = np.array([muzTL.shape[0],muzBL.shape[0]])
-            # lengthdiff = abs(lengths-lengths.max())
-
-            # muzTL = np.pad(muzTL,(0,lengthdiff[0]),constant_values = -1.1)
-            # muzBL = np.pad(muzBL,(0,lengthdiff[1]),constant_values = -1.1)
-            # muxTL = np.pad(muxTL,(0,lengthdiff[0]),constant_values = -1.1)
-            # muxBL = np.pad(muxBL,(0,lengthdiff[1]),constant_values = 1.1)
-            # muyTL = np.pad(muyTL,(0,lengthdiff[0]),constant_values = 1.1)
-            # muyBL = np.pad(muyBL,(0,lengthdiff[1]),constant_values = 1.1)
-            # wmuTL = np.pad(wmuTL,(0,lengthdiff[0]),constant_values = 0)
-            # wmuBL = np.pad(wmuBL,(0,lengthdiff[1]),constant_values = 0)
-
-            # lengths = np.array([muzTR.shape[0],muzBR.shape[0]])
-            # lengthdiff = abs(lengths-lengths.max())
-
-            # muzTR = np.pad(muzTR,(0,lengthdiff[0]),constant_values = 1.1)
-            # muzBR = np.pad(muzBR,(0,lengthdiff[1]),constant_values = 1.1)
-            # muxTR = np.pad(muxTR,(0,lengthdiff[0]),constant_values = 1.1)
-            # muxBR = np.pad(muxBR,(0,lengthdiff[1]),constant_values = -1.1)
-            # muyTR = np.pad(muyTR,(0,lengthdiff[0]),constant_values = 1.1)
-            # muyBR = np.pad(muyBR,(0,lengthdiff[1]),constant_values = 1.1)
-            # wmuTR = np.pad(wmuTR,(0,lengthdiff[0]),constant_values = 0)
-            # wmuBR = np.pad(wmuBR,(0,lengthdiff[1]),constant_values = 0)
-
             self.muz = np.ascontiguousarray(np.vstack((np.append(muzTL,muzBL),np.append(muzTR,muzBR))).T)
             self.mux = np.ascontiguousarray(np.vstack((np.append(muxTL,muxBL),np.append(muxTR,muxBR))).T)
             self.muy = np.ascontiguousarray(np.vstack((np.append(muyTL,muyBL),np.append(muyTR,muyBR))).T)

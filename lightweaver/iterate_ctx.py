@@ -168,22 +168,9 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     conv = convergence(ctx, JTol, popsTol, rhoTol)
 
     for it in range(NmaxIter):
-        # if it ==0:
-            # log.info(ctx.atmos.pyAtmos.mux) # Same
-            # log.info(ctx.atmos.mux) # Same
-            # log.info(ctx.atmos.pyAtmos.xLowerBc.mux) # All good
-            # log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector) # All good
-            # log.info(ctx.atmos.pyAtmos.xUpperBc.mux) # All good
-            # log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector) # All good
         if oscillateQuadrature:
             if (it > oscillateStart and not it % oscillateFrequency):
                 log.info('Swapping Quadrature')
-                # log.info(ctx.atmos.pyAtmos.mux) # Same
-                # log.info(ctx.atmos.mux) # Same
-                # log.info(ctx.atmos.pyAtmos.xLowerBc.mux) # All good
-                # log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector)  # All good
-                # log.info(ctx.atmos.pyAtmos.xUpperBc.mux)  # All good
-                # log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector)  # All good
 
                 atmosphereFlippedMus = deepcopy(ctx.atmos.pyAtmos)
                 atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
@@ -191,16 +178,9 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
                 atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
                 
-                # #A more consistent approach would include the below, but in the flipped case there's no need. This is anyway commented as current method for flagging 
                 atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
-                # log.info(ctx.atmos.pyAtmos.mux) #Flipped as expected
-                # log.info(ctx.atmos.mux) #Flipped as expected
-                # log.info(ctx.atmos.pyAtmos.xLowerBc.mux) # All good
-                # log.info(ctx.atmos.pyAtmos.xLowerBc.indexVector) # All good
-                # log.info(ctx.atmos.pyAtmos.xUpperBc.mux) # All good
-                # log.info(ctx.atmos.pyAtmos.xUpperBc.indexVector) # All good
         
         if (not quiet and
             (alwaysPrint or ((now := time.time()) >= prevPrint + printInterval))):
