@@ -193,6 +193,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
         if it < Nscatter:
             if printNow:
                 log.info('\n'+'    (Lambda iterating background)')
+                log.info('\n'+ JUpdate.compact_representation())
             # NOTE(cmo): reset print state
             printNow = False
             continue
