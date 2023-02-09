@@ -169,7 +169,7 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
 
     for it in range(NmaxIter):
         if oscillateQuadrature:
-            if (it > oscillateStart and not it % oscillateFrequency):
+            if (it > oscillateStart and not it % oscillateFrequency) or (it < Nscatter):
                 log.info('Swapping Quadrature')
 
                 atmosphereFlippedMus = deepcopy(ctx.atmos.pyAtmos)
