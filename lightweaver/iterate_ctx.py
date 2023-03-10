@@ -181,6 +181,8 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
                 ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
+
+                log.info('Quadrature Updated')
         
         if (not quiet and
             (alwaysPrint or ((now := time.time()) >= prevPrint + printInterval))):

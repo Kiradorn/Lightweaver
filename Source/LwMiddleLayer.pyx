@@ -754,7 +754,7 @@ cdef class LwAtmosphere:
                                                            self.Nwave, Nrays, Nbcy,
                                                            BcIdxs(&yUpperIdxs[0,0],
                                                                   yUpperIdxs.shape[0],
-                                                                  yLowerIdxs.shape[1]))
+                                                                  yUpperIdxs.shape[1]))
         cdef np.int32_t[:,::1] zLowerIdxs = self.pyAtmos.zLowerBc.indexVector
         self.atmos.zLowerBc = AtmosphericBoundaryCondition(BC_to_enum(s.zLowerBc),
                                                            self.Nwave, Nrays, Nbcz,
@@ -3035,6 +3035,7 @@ cdef class LwContext:
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
         self.ctx.atmos = &self.atmos.atmos
+        self.update_deps()
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
         '''
@@ -3274,7 +3275,7 @@ cdef class LwContext:
         if vlos or B:
             self.atmos.update_projections()
 
-        if temperature or vturb:
+        if any([temperature, ne, vturb, vlos]):
             self.compute_profiles()
 
         if temperature or ne:
