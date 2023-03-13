@@ -780,7 +780,6 @@ cdef class LwAtmosphere:
                 bc = np.zeros((self.Nwave, abc.bcData.shape(1), abc.bcData.shape(2)))
             else:
                 bc = self.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)
-            log.info(bc[500,:,30])
             verify_bc_array_sizes(&self.atmos.zLowerBc, bc, 'zLowerBc')
             data = f64_view_3(bc)
             self.atmos.zLowerBc.set_bc_data(data)

@@ -882,7 +882,7 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     for (int j = jStart; j != jEnd + dj; j += dj)
     {
         I(k, j) = 0.0;
-        // printf("%s\n", bcType);
+
         switch (bcType)
         {
             case THERMALISED:
@@ -940,7 +940,7 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                 if (la == 500){
                     if (j == 30){
                         printf(".............................................\n");
-                        printf("%f\n", I(k, j));
+                        printf("%d %d %d %f\n", la, k, j, I(k, j));
                     }
                 }
             } break;
