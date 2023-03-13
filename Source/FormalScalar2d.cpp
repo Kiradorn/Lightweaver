@@ -940,7 +940,7 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                 if (la == 500){
                     if (j == 30){
                         printf(".............................................\n");
-                        printf("%d %d %d %f\n", la, k, j, I(k, j));
+                        printf("%d %d %d %.10e\n", la, k, j, I(k, j));
                     }
                 }
             } break;
