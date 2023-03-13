@@ -784,8 +784,8 @@ cdef class LwAtmosphere:
             data = f64_view_3(bc)
             self.atmos.zLowerBc.set_bc_data(data)
             log.info("\nself.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)[500,0,30] in LwMiddleLayer: " + str(bc[500,0,30]))
-            # log.info("\nself.atmos.zLowerBc.bcData in LwMiddleLayer: " + str(self.atmos.zLowerBc.bcData[500][0][30]))
-            printf("\n%f", self.atmos.zLowerBc.bcData)
+            log.info("\nself.atmos.zLowerBc.bcData in LwMiddleLayer: " + str(&self.atmos.zLowerBc.bcData(500,0,30)))
+            # printf("\n%f", self.atmos.zLowerBc.bcData)
 
         if self.atmos.zUpperBc.type == CALLABLE:
             if np.all(self.pyAtmos.zUpperBc.indexVector == -1):
