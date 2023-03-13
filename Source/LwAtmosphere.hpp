@@ -45,7 +45,7 @@ struct AtmosphericBoundaryCondition
                     if (la == 500){
                         if (mu == 0){
                             if (k==30){
-                                printf("bcData at LwAtmosphere: %.10e", bcData(la, mu, k));
+                                printf("bcData at LwAtmosphere: %.10e\n", bcData(la, mu, k));
                             }
                         }
                     }
