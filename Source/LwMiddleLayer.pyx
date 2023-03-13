@@ -3242,7 +3242,7 @@ cdef class LwContext:
 
         self.atmos.compute_bcs(self.spect)
 
-        if self.atmos.zLowerBc.type == CALLABLE:
+        if self.atmos.pyAtmos.zLowerBc.type == CALLABLE:
             log.info(self.atmos.pyAtmos.zLowerBc.compute_bc(self.atmos.pyAtmos, self.spect)[500,0,30])
         # log.info(self.atmos.pyAtmos.zLowerBc)
 
