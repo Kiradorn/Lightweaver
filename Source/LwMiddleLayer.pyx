@@ -3032,17 +3032,37 @@ cdef class LwContext:
         self.setup_threads(self.kwargs['Nthreads'])
 
     
-    def update_quadrature(self, atmos, spect, backgroundProvider = None):
+    def update_quadrature(self, atmos, spect, backgroundProvider = None):#, ngOptions = None, initSol = None, conserveCharge = False, fsIterScheme = None, initSol = None):
+
+        #fsIterSchemeProperties = self.get_fs_iter_scheme_properties(fsIterScheme)
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
-        self.ctx.atmos = &self.atmos.atmos
-        # self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
-        #                        atmos.Nspace, atmos.Noutgoing)
-        # self.ctx.spect = &self.spect.spect
-        # self.background = LwBackground(atmos, self.eqPops, spect.radSet,
-        #                               spect.wavelength, provider=backgroundProvider)
-        # self.ctx.background = &self.background.background
+        self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
+                               atmos.Nspace, atmos.Noutgoing)
+        self.background = LwBackground(self.atmos, self.eqPops, spect.radSet,
+                            spect.wavelength, provider=backgroundProvider)
 
+        #activeAtoms = spect.radSet.activeAtoms
+        #detailedAtoms = spect.radSet.detailedAtoms
+        #self.activeAtoms = [LwAtom(a, self.atmos, self.eqPops, spect,
+        #                           self.background, ngOptions=ngOptions,
+        #                           initSol=initSol,
+        #                           conserveCharge=conserveCharge,
+        #                           fsIterSchemeProperties=fsIterSchemeProperties)
+        #                    for a in activeAtoms]
+        #self.detailedAtoms = [LwAtom(a, self.atmos, self.eqPops, spect,
+        #                             self.background, ngOptions=None,
+        #                             initSol=InitialSolution.Lte, detailed=True,
+        #                             fsIterSchemeProperties=fsIterSchemeProperties)
+        #                      for a in detailedAtoms]
+
+        self.ctx.atmos = &self.atmos.atmos
+        self.ctx.spect = &self.spect.spect
+        self.ctx.background = &self.background.background
+
+        shape = (self.spect.I.shape[0], self.atmos.Nrays, self.atmos.Nspace)
+        self.depthData = LwDepthData(*shape)
+        self.ctx.depthData = &self.depthData.depthData
 
         self.update_deps()
     
