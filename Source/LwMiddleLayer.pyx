@@ -783,7 +783,7 @@ cdef class LwAtmosphere:
             verify_bc_array_sizes(&self.atmos.zLowerBc, bc, 'zLowerBc')
             data = f64_view_3(bc)
             self.atmos.zLowerBc.set_bc_data(data)
-            log.info(bc[500,0,30])
+            log.info("self.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)[500,0,30] in MpiStackedContext: ", bc[500,0,30])
             # log.info(&self.atmos.zLowerBc.bcData)
 
         if self.atmos.zUpperBc.type == CALLABLE:
@@ -3038,7 +3038,7 @@ cdef class LwContext:
 
         #fsIterSchemeProperties = self.get_fs_iter_scheme_properties(fsIterScheme)
 
-        log.info('recreating the atmosphere')
+        # log.info('recreating the atmosphere')
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
         # log.info('recreating the spectrum')
         # self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
@@ -3061,7 +3061,7 @@ cdef class LwContext:
         #                             fsIterSchemeProperties=fsIterSchemeProperties)
         #                      for a in detailedAtoms]
 
-        log.info('setting ctx variables')
+        # log.info('setting ctx variables')
         self.ctx.atmos = &self.atmos.atmos
         # self.ctx.spect = &self.spect.spect
         # self.ctx.background = &self.background.background
@@ -3069,7 +3069,7 @@ cdef class LwContext:
         # shape = (self.spect.I.shape[0], self.atmos.Nrays, self.atmos.Nspace)
         # self.depthData = LwDepthData(*shape)
         # self.ctx.depthData = &self.depthData.depthData
-        log.info('ctx variables set')
+        # log.info('ctx variables set')
 
         # log.info('updating dependencies')
         # self.update_deps(background = False)
