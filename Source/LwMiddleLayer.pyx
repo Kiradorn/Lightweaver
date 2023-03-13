@@ -3059,6 +3059,7 @@ cdef class LwContext:
         #                             fsIterSchemeProperties=fsIterSchemeProperties)
         #                      for a in detailedAtoms]
 
+        log.info('setting ctx variables')
         self.ctx.atmos = &self.atmos.atmos
         self.ctx.spect = &self.spect.spect
         self.ctx.background = &self.background.background
@@ -3066,8 +3067,11 @@ cdef class LwContext:
         shape = (self.spect.I.shape[0], self.atmos.Nrays, self.atmos.Nspace)
         self.depthData = LwDepthData(*shape)
         self.ctx.depthData = &self.depthData.depthData
+        log.info('ctx variables set')
 
+        log.info('updating dependencies')
         self.update_deps()
+        log.info('dependencies updated')
     
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
