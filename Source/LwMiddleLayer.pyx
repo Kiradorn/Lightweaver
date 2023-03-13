@@ -3031,7 +3031,7 @@ cdef class LwContext:
 
         self.setup_threads(self.kwargs['Nthreads'])
 
-    def update_quadrature(self, atmos, spect):
+    def update_quadrature(self, atmos, spect, backgroundProvider = None):
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
         self.ctx.atmos = &self.atmos.atmos
