@@ -3031,6 +3031,7 @@ cdef class LwContext:
 
         self.setup_threads(self.kwargs['Nthreads'])
 
+    '''
     def update_quadrature(self, atmos, spect, backgroundProvider = None):
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
@@ -3044,6 +3045,7 @@ cdef class LwContext:
 
 
         self.update_deps()
+    '''
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
         '''
