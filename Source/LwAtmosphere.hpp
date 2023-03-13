@@ -36,9 +36,22 @@ struct AtmosphericBoundaryCondition
     void set_bc_data(F64View3D data)
     {
         for (int la = 0; la < bcData.shape(0); ++la)
+        {
             for (int mu = 0; mu < bcData.shape(1); ++mu)
+            {
                 for (int k = 0; k < bcData.shape(2); ++k)
+                {
                     bcData(la, mu, k) = data(la, mu, k);
+                    if (la == 500){
+                        if (mu == 0){
+                            if (k==30){
+                                printf("bcData at LwAtmosphere: %.10e", bcData(la, mu, k));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 };
 
