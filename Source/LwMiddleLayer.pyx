@@ -3038,7 +3038,7 @@ cdef class LwContext:
         self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
                                 atmos.Nspace, atmos.Noutgoing)
         self.ctx.spect = &self.spect.spect
-        self.background = LwBackground(atmos, self.spect.eqPops, self.spect.radSet,
+        self.background = LwBackground(atmos, self.eqPops, self.spect.radSet,
                                        self.spect.wavelength, provider=backgroundProvider)
         self.ctx.background = &self.background.background
 
