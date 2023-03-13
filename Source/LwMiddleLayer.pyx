@@ -3242,9 +3242,9 @@ cdef class LwContext:
 
         self.atmos.compute_bcs(self.spect)
 
-        # if self.atmos.pyAtmos.zLowerBc.type == CALLABLE:
-        #     log.info(self.atmos.pyAtmos.zLowerBc.compute_bc(self.atmos.pyAtmos, self.spect)[500,0,30])
-        log.info(self.atmos.pyAtmos.zLowerBc)
+        if not isinstance(self.atmos.pyAtmos.zLowerBc, [THERMALISED, ZERO, PERIODIC]):
+            log.info(self.atmos.pyAtmos.zLowerBc.compute_bc(self.atmos.pyAtmos, self.spect)[500,0,30])
+        # log.info(self.atmos.pyAtmos.zLowerBc)
 
         cdef IterationResult maxChange = formal_sol_gamma_matrices(self.ctx, lambdaIterate, params)
         update = IterationUpdate_from_IterationResult(self, maxChange)
