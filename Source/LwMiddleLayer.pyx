@@ -3034,8 +3034,8 @@ cdef class LwContext:
     
     def update_quadrature(self, atmos, spect, backgroundProvider = None):
 
-        self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
-        self.ctx.atmos = &self.atmos.atmos
+        # self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
+        # self.ctx.atmos = &self.atmos.atmos
         # self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
         #                        atmos.Nspace, atmos.Noutgoing)
         # self.ctx.spect = &self.spect.spect
@@ -3043,8 +3043,8 @@ cdef class LwContext:
         #                               spect.wavelength, provider=backgroundProvider)
         # self.ctx.background = &self.background.background
 
-
-        self.update_deps()
+        self.update_projections()
+        # self.update_deps()
     
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
