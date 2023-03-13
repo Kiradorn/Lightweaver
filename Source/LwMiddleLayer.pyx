@@ -3069,9 +3069,9 @@ cdef class LwContext:
         self.ctx.depthData = &self.depthData.depthData
         log.info('ctx variables set')
 
-        // log.info('updating dependencies')
-        // self.update_deps(background = False)
-        // log.info('dependencies updated')
+        # log.info('updating dependencies')
+        # self.update_deps(background = False)
+        # log.info('dependencies updated')
     
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
