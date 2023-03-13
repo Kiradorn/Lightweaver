@@ -3075,6 +3075,8 @@ cdef class LwContext:
         # log.info('updating dependencies')
         # self.update_deps(background = False)
         # log.info('dependencies updated')
+        self.update_threads()
+
     
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
