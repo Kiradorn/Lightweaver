@@ -3311,21 +3311,27 @@ cdef class LwContext:
             Whether to print any update information from these functions
             (default: True).
         '''
+        log.info('updating projections')
         if vlos or B:
             self.atmos.update_projections()
 
+        log.info('updating profiles')
         if any([temperature, ne, vturb, vlos]):
             self.compute_profiles()
 
+        log.info('updating Hmin')
         if temperature or ne:
             self.eqPops.update_lte_atoms_Hmin_pops(self.kwargs['atmos'], conserveCharge=self.conserveCharge, 
                                                    updateTotals=True, quiet=quiet)
 
+        log.info('updating background')
         if background and any([temperature, ne, vturb, vlos]):
             self.background.update_background(self.atmos)
 
+        log.info('updating hprd')
         if self.hprd and hprd:
             self.update_hprd_coeffs()
+
 
     cpdef rel_diff_pops(self, printUpdate=None):
         '''
