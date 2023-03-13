@@ -625,6 +625,8 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                     assert(false);
                 }
                 I(k, j) = currentBc.bcData(la, muIdx, j);
+                printf(".............................................\n");
+                printf("%d\n", I(k,j));
             } break;
 
             case ZERO: break;
