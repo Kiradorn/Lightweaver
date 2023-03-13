@@ -3038,12 +3038,12 @@ cdef class LwContext:
 
         log.info('recreating the atmosphere')
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
-        log.info('recreating the spectrum')
-        self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
-                               atmos.Nspace, atmos.Noutgoing)
-        log.info('recreating the background')
-        self.background = LwBackground(self.atmos, self.eqPops, spect.radSet,
-                            spect.wavelength, provider=backgroundProvider)
+        # log.info('recreating the spectrum')
+        # self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
+        #                        atmos.Nspace, atmos.Noutgoing)
+        # log.info('recreating the background')
+        # self.background = LwBackground(self.atmos, self.eqPops, spect.radSet,
+        #                     spect.wavelength, provider=backgroundProvider)
 
         #activeAtoms = spect.radSet.activeAtoms
         #detailedAtoms = spect.radSet.detailedAtoms
@@ -3061,12 +3061,12 @@ cdef class LwContext:
 
         log.info('setting ctx variables')
         self.ctx.atmos = &self.atmos.atmos
-        self.ctx.spect = &self.spect.spect
-        self.ctx.background = &self.background.background
+        # self.ctx.spect = &self.spect.spect
+        # self.ctx.background = &self.background.background
 
-        shape = (self.spect.I.shape[0], self.atmos.Nrays, self.atmos.Nspace)
-        self.depthData = LwDepthData(*shape)
-        self.ctx.depthData = &self.depthData.depthData
+        # shape = (self.spect.I.shape[0], self.atmos.Nrays, self.atmos.Nspace)
+        # self.depthData = LwDepthData(*shape)
+        # self.ctx.depthData = &self.depthData.depthData
         log.info('ctx variables set')
 
         # log.info('updating dependencies')
