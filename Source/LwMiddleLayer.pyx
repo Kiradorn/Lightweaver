@@ -3242,7 +3242,7 @@ cdef class LwContext:
 
         self.atmos.compute_bcs(self.spect)
 
-        if not isinstance(self.atmos.pyAtmos.zLowerBc, [THERMALISED, ZERO, PERIODIC]):
+        if not isinstance(self.atmos.pyAtmos.zLowerBc, [ZeroRadiation, ThermalisedRadiation, PeriodicRadiation]):
             log.info(self.atmos.pyAtmos.zLowerBc.compute_bc(self.atmos.pyAtmos, self.spect)[500,0,30])
         # log.info(self.atmos.pyAtmos.zLowerBc)
 
