@@ -783,7 +783,7 @@ cdef class LwAtmosphere:
             verify_bc_array_sizes(&self.atmos.zLowerBc, bc, 'zLowerBc')
             data = f64_view_3(bc)
             self.atmos.zLowerBc.set_bc_data(data)
-            log.info("self.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)[500,0,30] in MpiStackedContext: ", bc[500,0,30])
+            log.info("self.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)[500,0,30] in MpiStackedContext: ", str(bc[500,0,30]))
             # log.info(&self.atmos.zLowerBc.bcData)
 
         if self.atmos.zUpperBc.type == CALLABLE:
@@ -3244,8 +3244,8 @@ cdef class LwContext:
 
         self.atmos.compute_bcs(self.spect)
 
-        if not isinstance(self.atmos.pyAtmos.zLowerBc, (ZeroRadiation, ThermalisedRadiation, PeriodicRadiation)):
-            log.info(self.atmos.pyAtmos.zLowerBc.compute_bc(self.atmos.pyAtmos, self.spect)[500,0,30])
+        # if not isinstance(self.atmos.pyAtmos.zLowerBc, (ZeroRadiation, ThermalisedRadiation, PeriodicRadiation)):
+        #     log.info(self.atmos.pyAtmos.zLowerBc.compute_bc(self.atmos.pyAtmos, self.spect)[500,0,30])
         # log.info(self.atmos.pyAtmos.zLowerBc)
 
         cdef IterationResult maxChange = formal_sol_gamma_matrices(self.ctx, lambdaIterate, params)
