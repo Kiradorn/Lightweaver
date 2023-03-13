@@ -937,10 +937,12 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                 }
 
                 I(k, j) = currentBc.bcData(la, muIdx, j);
-                if (la == 500){
-                    if (j == 30){
-                        printf(".............................................\n");
-                        printf("%d %d %d %.10e\n", la, k, j, I(k, j));
+                if (mu == 0){
+                    if (la == 500){
+                        if (j == 30){
+                            printf(".............................................\n");
+                            printf("%d %d %d %.10e\n", la, k, j, I(k, j));
+                        }
                     }
                 }
             } break;
