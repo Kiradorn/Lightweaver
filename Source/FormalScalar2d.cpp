@@ -882,7 +882,7 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     for (int j = jStart; j != jEnd + dj; j += dj)
     {
         I(k, j) = 0.0;
-        printf("%s\n", bcType);
+        // printf("%s\n", bcType);
         switch (bcType)
         {
             case THERMALISED:
