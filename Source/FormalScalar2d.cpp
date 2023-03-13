@@ -572,7 +572,6 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     for (int j = jStart; j != jEnd + dj; j += dj)
     {
         I(j, k) = 0.0;
-
         switch (bcType)
         {
             case THERMALISED:
@@ -625,8 +624,6 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                     assert(false);
                 }
                 I(k, j) = currentBc.bcData(la, muIdx, j);
-                printf(".............................................\n");
-                printf("%d\n", I(k,j));
             } break;
 
             case ZERO: break;
@@ -636,7 +633,6 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                 printf("Unsupported z-boundary type");
             } break;
         }
-
         if (computeOperator)
             Psi(k, j) = 0.0;
     }
@@ -886,7 +882,7 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
     for (int j = jStart; j != jEnd + dj; j += dj)
     {
         I(k, j) = 0.0;
-
+        printf("%s\n", bcType);
         switch (bcType)
         {
             case THERMALISED:
@@ -941,6 +937,8 @@ void piecewise_besser_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                 }
 
                 I(k, j) = currentBc.bcData(la, muIdx, j);
+                printf(".............................................\n");
+                printf("%d\n", I(k,j));
             } break;
 
             case ZERO: break;
