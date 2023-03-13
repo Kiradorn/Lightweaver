@@ -3035,6 +3035,14 @@ cdef class LwContext:
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
         self.ctx.atmos = &self.atmos.atmos
+        self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
+                                atmos.Nspace, atmos.Noutgoing)
+        self.ctx.spect = &self.spect.spect
+        self.background = LwBackground(atmos, self.spect.eqPops, self.spect.radSet,
+                                       self.spect.wavelength, provider=backgroundProvider)
+        self.ctx.background = &self.background.background
+
+
         self.update_deps()
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
@@ -3244,7 +3252,7 @@ cdef class LwContext:
 
     cpdef update_deps(self, temperature=True, ne=True, vturb=True,
                       vlos=True, B=True, background=True, hprd=True,
-                      quiet=True):
+                      quiet=True, quadrature=True):
         '''
         Update various dependent parameters in the simulation after changes
         to different components. If a component has not been adjust then its
@@ -3268,6 +3276,8 @@ cdef class LwContext:
             Whether the background needs updating.
         hprd : bool, optional
             Whether the hybrid PRD terms need updating.
+        quadrature : bool, optional
+            Whether the quadrature terms need updating.
         quiet : bool, optional
             Whether to print any update information from these functions
             (default: True).
