@@ -3242,6 +3242,8 @@ cdef class LwContext:
 
         self.atmos.compute_bcs(self.spect)
 
+        log.info(self.atmos.pyAtmos.zLowerBc.I[500,0,30])
+
         cdef IterationResult maxChange = formal_sol_gamma_matrices(self.ctx, lambdaIterate, params)
         update = IterationUpdate_from_IterationResult(self, maxChange)
         update.crsw = crswVal
