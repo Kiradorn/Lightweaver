@@ -3031,21 +3031,21 @@ cdef class LwContext:
 
         self.setup_threads(self.kwargs['Nthreads'])
 
-    '''
+    
     def update_quadrature(self, atmos, spect, backgroundProvider = None):
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
         self.ctx.atmos = &self.atmos.atmos
-        self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
+        # self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
                                 atmos.Nspace, atmos.Noutgoing)
-        self.ctx.spect = &self.spect.spect
-        self.background = LwBackground(atmos, self.eqPops, spect.radSet,
+        # self.ctx.spect = &self.spect.spect
+        # self.background = LwBackground(atmos, self.eqPops, spect.radSet,
                                        spect.wavelength, provider=backgroundProvider)
-        self.ctx.background = &self.background.background
+        # self.ctx.background = &self.background.background
 
 
         self.update_deps()
-    '''
+    
 
     def set_formal_solver(self, formalSolver, inConstructor=False):
         '''
