@@ -782,7 +782,7 @@ cdef class LwAtmosphere:
                 bc = self.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)
             verify_bc_array_sizes(&self.atmos.zLowerBc, bc, 'zLowerBc')
             data = f64_view_3(bc)
-            log,.info(data[500,:,30])
+            log.info(data[500,:,30])
             self.atmos.zLowerBc.set_bc_data(data)
 
         if self.atmos.zUpperBc.type == CALLABLE:
