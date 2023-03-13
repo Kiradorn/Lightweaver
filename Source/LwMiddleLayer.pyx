@@ -3070,7 +3070,7 @@ cdef class LwContext:
         log.info('ctx variables set')
 
         log.info('updating dependencies')
-        self.update_deps()
+        self.update_deps(background = False)
         log.info('dependencies updated')
     
 
