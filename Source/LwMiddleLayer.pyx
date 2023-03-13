@@ -3036,12 +3036,12 @@ cdef class LwContext:
 
         #fsIterSchemeProperties = self.get_fs_iter_scheme_properties(fsIterScheme)
 
-        log,info('recreating the atmosphere')
+        log.info('recreating the atmosphere')
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
-        log,info('recreating the spectrum')
+        log.info('recreating the spectrum')
         self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
                                atmos.Nspace, atmos.Noutgoing)
-        log,info('recreating the background')
+        log.info('recreating the background')
         self.background = LwBackground(self.atmos, self.eqPops, spect.radSet,
                             spect.wavelength, provider=backgroundProvider)
 
