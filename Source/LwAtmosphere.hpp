@@ -42,13 +42,13 @@ struct AtmosphericBoundaryCondition
                 for (int k = 0; k < bcData.shape(2); ++k)
                 {
                     bcData(la, mu, k) = data(la, mu, k);
-                    if (la == 500){
-                        if (mu == 0){
-                            if (k==30){
-                                printf("bcData at LwAtmosphere: %.10e\n", bcData(la, mu, k));
-                            }
-                        }
-                    }
+                    // if (la == 500){
+                    //     if (mu == 0){
+                    //         if (k==30){
+                    //             printf("bcData at LwAtmosphere: %.10e\n", bcData(la, mu, k));
+                    //         }
+                    //     }
+                    // }
                 }
             }
         }
