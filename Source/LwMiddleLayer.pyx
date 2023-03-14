@@ -783,7 +783,7 @@ cdef class LwAtmosphere:
             verify_bc_array_sizes(&self.atmos.zLowerBc, bc, 'zLowerBc')
             data = f64_view_3(bc)
             self.atmos.zLowerBc.set_bc_data(data)
-            log.info("\nself.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)[500,0,30] in LwMiddleLayer: " + str(bc[500,0,30]))
+            # log.info("\nself.pyAtmos.zLowerBc.compute_bc(self.pyAtmos, spect)[500,0,30] in LwMiddleLayer: " + str(bc[500,0,30]))
             # log.info("\nself.atmos.zLowerBc.bcData in LwMiddleLayer: " + str(self.atmos.zLowerBc.bcData(500,0,30)))
             # printf("\n%f", self.atmos.zLowerBc.bcData)
 
@@ -3035,47 +3035,13 @@ cdef class LwContext:
         self.setup_threads(self.kwargs['Nthreads'])
 
     
-    def update_quadrature(self, atmos, spect, backgroundProvider = None):#, ngOptions = None, initSol = None, conserveCharge = False, fsIterScheme = None, initSol = None):
+    def update_quadrature(self, atmos, spect):
 
-        #fsIterSchemeProperties = self.get_fs_iter_scheme_properties(fsIterScheme)
-
-        # log.info('recreating the atmosphere')
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
-        # log.info('recreating the spectrum')
-        # self.spect = LwSpectrum(spect.wavelength, atmos.Nrays,
-        #                        atmos.Nspace, atmos.Noutgoing)
-        # log.info('recreating the background')
-        # self.background = LwBackground(self.atmos, self.eqPops, spect.radSet,
-        #                     spect.wavelength, provider=backgroundProvider)
 
-        #activeAtoms = spect.radSet.activeAtoms
-        #detailedAtoms = spect.radSet.detailedAtoms
-        #self.activeAtoms = [LwAtom(a, self.atmos, self.eqPops, spect,
-        #                           self.background, ngOptions=ngOptions,
-        #                           initSol=initSol,
-        #                           conserveCharge=conserveCharge,
-        #                           fsIterSchemeProperties=fsIterSchemeProperties)
-        #                    for a in activeAtoms]
-        #self.detailedAtoms = [LwAtom(a, self.atmos, self.eqPops, spect,
-        #                             self.background, ngOptions=None,
-        #                             initSol=InitialSolution.Lte, detailed=True,
-        #                             fsIterSchemeProperties=fsIterSchemeProperties)
-        #                      for a in detailedAtoms]
-
-        # log.info('setting ctx variables')
         self.ctx.atmos = &self.atmos.atmos
-        # self.ctx.spect = &self.spect.spect
-        # self.ctx.background = &self.background.background
 
-        # shape = (self.spect.I.shape[0], self.atmos.Nrays, self.atmos.Nspace)
-        # self.depthData = LwDepthData(*shape)
-        # self.ctx.depthData = &self.depthData.depthData
-        # log.info('ctx variables set')
-
-        # log.info('updating dependencies')
-        # self.update_deps(background = False)
-        # log.info('dependencies updated')
-        self.update_threads()
+        self.update_threads() #Extremely important. FormalData used in the Formal Solvers has a reference to atmosphere that needs to be updated.
 
     
 
@@ -3320,24 +3286,20 @@ cdef class LwContext:
             Whether to print any update information from these functions
             (default: True).
         '''
-        log.info('updating projections')
+
         if vlos or B:
             self.atmos.update_projections()
-
-        log.info('updating profiles')
+        
         if any([temperature, ne, vturb, vlos]):
             self.compute_profiles()
-
-        log.info('updating Hmin')
+        
         if temperature or ne:
             self.eqPops.update_lte_atoms_Hmin_pops(self.kwargs['atmos'], conserveCharge=self.conserveCharge, 
                                                    updateTotals=True, quiet=quiet)
-
-        log.info('updating background')
+        
         if background and any([temperature, ne, vturb, vlos]):
             self.background.update_background(self.atmos)
 
-        log.info('updating hprd')
         if self.hprd and hprd:
             self.update_hprd_coeffs()
 
