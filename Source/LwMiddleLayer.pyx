@@ -2785,6 +2785,10 @@ cdef class LwSpectrum:
         for k in range(self.J.shape[1]):
             J[:, k] = np.interp(self.wavelength, prevSpect.wavelength, prevSpect.J[:, k])
 
+    def average_J(self, prev_J):
+        self.J = (self.J + prev_J)/2.
+        self.spect.J = f64_view_2(self.J)
+
     @property
     def wavelength(self):
         '''
@@ -3034,7 +3038,6 @@ cdef class LwContext:
 
         self.setup_threads(self.kwargs['Nthreads'])
 
-    
     def update_quadrature(self, atmos, spect):
 
         self.atmos = LwAtmosphere(atmos, spect.wavelength.shape[0])
@@ -3042,10 +3045,6 @@ cdef class LwContext:
         self.ctx.atmos = &self.atmos.atmos
 
         self.update_threads() #Extremely important. FormalData used in the Formal Solvers has a reference to atmosphere that needs to be updated.
-
-    def average_J(self, prev_J):
-
-        self.spect.J = (self.spect.J + prev_J)/2.
     
     def set_formal_solver(self, formalSolver, inConstructor=False):
         '''
