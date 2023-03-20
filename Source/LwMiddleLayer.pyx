@@ -3043,8 +3043,10 @@ cdef class LwContext:
 
         self.update_threads() #Extremely important. FormalData used in the Formal Solvers has a reference to atmosphere that needs to be updated.
 
-    
+    def average_J(self, prev_J):
 
+        self.spect.J = (self.spect.J + prev_J)/2.
+    
     def set_formal_solver(self, formalSolver, inConstructor=False):
         '''
         For internal use. Set the formal solver through the constructor.
