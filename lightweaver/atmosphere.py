@@ -1538,8 +1538,14 @@ class Atmosphere:
                 self.muz = np.ascontiguousarray(np.array([-muz,muz]).T)
                 self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
                 self.muy = np.zeros_like(self.muz)
-                self.mux = np.sqrt(1.0 - self.muz**2)
-                self.mux[:,0] *= -1
+                #There is no muy information to set the direction of the mux rays so we manually do it
+                self.mux = np.zeros_like(self.muz)
+                self.mux[:self.mux.shape[0] // 2, 0] = -np.sqrt(1-muz[:muz.shape[0] // 2]**2)
+                self.mux[self.mux.shape[0] // 2:, 0] = np.sqrt(1-muz[muz.shape[0] // 2:]**2)
+                self.mux[:self.mux.shape[0] // 2, 1] = np.sqrt(1-muz[:muz.shape[0] // 2]**2)
+                self.mux[self.mux.shape[0] // 2:, 1] = -np.sqrt(1-muz[muz.shape[0] // 2:]**2)
+                
+                np.ascontiguousarray(np.array([np.append(-np.sqrt(1-muz**2),np.sqrt(1-muz**2)),np.append(np.sqrt(1-muz**2),-np.sqrt(1-muz**2))]).T)
             elif muy is None:
                 self.muz = np.ascontiguousarray(np.array([-muz,muz]).T)
                 self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
@@ -1574,9 +1580,9 @@ class Atmosphere:
 
             #Will definitely need to rethink this once 3D becomes a thing
             top_left = (muz<0) & (mux<0)
-            top_right = (muz>0) & (mux>0)
-            bottom_left = (muz<0) & (mux>0)
-            bottom_right = (muz>0) & (mux<0)
+            top_right = (muz>=0) & (mux>=0)
+            bottom_left = (muz<0) & (mux>=0)
+            bottom_right = (muz>=0) & (mux<0)
 
             lengths = np.array([muz[top_left].shape[0],muz[top_right].shape[0]])
             lengthdiff = abs(lengths-lengths.max())
@@ -1613,7 +1619,11 @@ class Atmosphere:
             if not np.isclose(self.wmu.sum(), 2.0):
                 raise ValueError('Sum of wmus is not 2.0. (wmu values are internally halved for upDown compliance)')
             
-            
+        # print(self.mux.shape)
+        # print(self.muy.shape)
+        # print(self.muz.shape)    
+        # print(self.wmu.shape)
+
         self.configure_bcs(upOnly=upOnly)
 
     def configure_bcs(self, upOnly: bool=False):
@@ -1675,13 +1685,13 @@ class Atmosphere:
         # print('zUpperBc: ', self.zUpperBc.indexVector)
 
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
-        mux = self.mux[self.mux>0]
-        muy = self.muy[self.mux>0]
-        muz = self.muz[self.mux>0]
+        mux = self.mux[self.mux>=0]
+        muy = self.muy[self.mux>=0]
+        muz = self.muz[self.mux>=0]
         # mux[abs(mux)>1] = 0.
         # muy[abs(muy)>1] = 0.
         # muz[abs(muz)>1] = 0.
-        indexVector[self.mux>0] = np.squeeze(np.argwhere(self.muz[self.mux>0]))
+        indexVector[self.mux>=0] = np.where(self.mux>=0)[0]
 
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
         
@@ -1697,7 +1707,7 @@ class Atmosphere:
         # mux[abs(mux)>1] = 0.
         # muy[abs(muy)>1] = 0.
         # muz[abs(muz)>1] = 0.
-        indexVector[self.mux<0] = np.squeeze(np.argwhere(self.muz[self.mux<0]))
+        indexVector[self.mux<0] = np.where(self.mux<0)[0]
 
         self.xUpperBc.set_required_angles(mux, muy, muz, indexVector)
 
