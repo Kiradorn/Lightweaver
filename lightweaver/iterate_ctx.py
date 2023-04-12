@@ -1,5 +1,5 @@
 import time
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, Optional, Type, Callable
 
 from .iteration_update import IterationUpdate
 
@@ -100,7 +100,11 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                    returnFinalConvergence: bool=False,
                    oscillateQuadrature: bool=False,
                    oscillateStart: int = 0,
-                   oscillateFrequency: int=10):
+                   oscillateFrequency: int=10,
+                   update_model: Optional[Callable[..., None]]=None,
+                   originalAtmosphere: Optional[dict]=None,
+                   ):
+
     '''
     Iterate a configured Context towards statistical equilibrium solution.
 
@@ -244,6 +248,9 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
                 return it, finalConvergence
             else:
                 return it
+            
+        if update_model is not None:
+            update_model(ctx, printNow, originalAtmosphere)
 
         # NOTE(cmo): reset print state
         printNow = False
