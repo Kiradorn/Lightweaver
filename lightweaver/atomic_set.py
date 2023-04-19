@@ -693,9 +693,15 @@ class SpeciesStateTable:
             maxDiff = 0.0
             maxName = '--'
             ne = np.zeros_like(atmos.ne)
-            diffs = [update_lte_pops_inplace(atom.model, atmos.temperature,
-                                             atmos.ne, atom.nTotal, atom.nStar,
-                                             debye=True)[1] for atom in self.atomicPops]
+            # diffs = [update_lte_pops_inplace(atom.model, atmos.temperature,
+            #                                  atmos.ne, atom.nTotal, atom.nStar,
+            #                                  debye=True)[1] for atom in self.atomicPops]
+            diffs = []
+            for atom in self.atomicPops:
+                diffs.append(update_lte_pops_inplace(atom.model, atmos.temperature,
+                                                     atmos.ne, atom.nTotal, atom.nStar,
+                                                     debye=True)[1])
+            
 
             for j, atom in enumerate(self.atomicPops):
                 if conserveCharge:
