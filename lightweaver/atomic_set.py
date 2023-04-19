@@ -15,6 +15,9 @@ from .atomic_table import (AtomicAbundance, DefaultAtomicAbundance, Element,
                            KuruczPf, KuruczPfTable, PeriodicTable)
 from .molecule import MolecularTable
 
+import logging
+log  = logging.getLogger(__name__)
+
 
 @njit(cache=True)
 def lte_pops_impl(temperature, ne, nTotal, stages, energies,
@@ -119,8 +122,16 @@ def update_lte_pops_inplace(atomicModel: AtomicModel, temperature: np.ndarray,
     stages = np.array([l.stage for l in atomicModel.levels])
     energies = np.array([l.E_SI for l in atomicModel.levels])
     gs = np.array([l.g for l in atomicModel.levels])
-    return lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
-                         debye=debye, nStar=nStar, computeDiff=True)
+    try:
+        return lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
+                            debye=debye, nStar=nStar, computeDiff=True)
+    except Exception as e:
+        log.info(e)
+        log.info('ne :')
+        log.info(ne)
+        log.info('nStar :')
+        log.info(nStar)
+
 
 class LteNeIterator:
     def __init__(self, atoms: Iterable[AtomicModel], temperature: np.ndarray,
