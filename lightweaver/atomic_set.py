@@ -123,14 +123,16 @@ def update_lte_pops_inplace(atomicModel: AtomicModel, temperature: np.ndarray,
     energies = np.array([l.E_SI for l in atomicModel.levels])
     gs = np.array([l.g for l in atomicModel.levels])
     try:
-        return lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
-                            debye=debye, nStar=nStar, computeDiff=True)
+        toReturn = lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
+                                 debye=debye, nStar=nStar, computeDiff=True)
     except Exception as e:
         log.info(e)
         log.info('ne :')
         log.info(ne)
         log.info('nStar :')
         log.info(nStar)
+
+    return toReturn
 
 
 class LteNeIterator:
