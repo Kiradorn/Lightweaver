@@ -122,6 +122,8 @@ def update_lte_pops_inplace(atomicModel: AtomicModel, temperature: np.ndarray,
     stages = np.array([l.stage for l in atomicModel.levels])
     energies = np.array([l.E_SI for l in atomicModel.levels])
     gs = np.array([l.g for l in atomicModel.levels])
+    
+    toReturn = [0,0]
     try:
         toReturn = lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
                                  debye=debye, nStar=nStar, computeDiff=True)
