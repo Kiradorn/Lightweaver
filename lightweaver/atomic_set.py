@@ -123,18 +123,21 @@ def update_lte_pops_inplace(atomicModel: AtomicModel, temperature: np.ndarray,
     energies = np.array([l.E_SI for l in atomicModel.levels])
     gs = np.array([l.g for l in atomicModel.levels])
     
-    toReturn = [0,0]
-    try:
-        toReturn = lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
-                                 debye=debye, nStar=nStar, computeDiff=True)
-    except Exception as e:
-        log.info(e)
-        log.info('ne :')
-        log.info(ne)
-        log.info('nStar :')
-        log.info(nStar)
+    return lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
+                         debye=debye, nStar=nStar, computeDiff=True)
 
-    return toReturn
+    # toReturn = [0,0]
+    # try:
+    #     toReturn = lte_pops_impl(temperature, ne, nTotal, stages, energies, gs,
+    #                                 debye=debye, nStar=nStar, computeDiff=True)
+    # except Exception as e:
+    #     log.info(e)
+    #     log.info('ne :')
+    #     log.info(ne)
+    #     log.info('nStar :')
+    #     log.info(nStar)
+
+    # return toReturn
 
 
 class LteNeIterator:
@@ -695,14 +698,14 @@ class SpeciesStateTable:
             maxDiff = 0.0
             maxName = '--'
             ne = np.zeros_like(atmos.ne)
-            # diffs = [update_lte_pops_inplace(atom.model, atmos.temperature,
-            #                                  atmos.ne, atom.nTotal, atom.nStar,
-            #                                  debye=True)[1] for atom in self.atomicPops]
-            diffs = []
-            for atom in self.atomicPops:
-                diffs.append(update_lte_pops_inplace(atom.model, atmos.temperature,
-                                                     atmos.ne, atom.nTotal, atom.nStar,
-                                                     debye=True)[1])
+            diffs = [update_lte_pops_inplace(atom.model, atmos.temperature,
+                                             atmos.ne, atom.nTotal, atom.nStar,
+                                             debye=True)[1] for atom in self.atomicPops]
+            # diffs = []
+            # for atom in self.atomicPops:
+            #     diffs.append(update_lte_pops_inplace(atom.model, atmos.temperature,
+            #                                          atmos.ne, atom.nTotal, atom.nStar,
+            #                                          debye=True)[1])
             
 
             for j, atom in enumerate(self.atomicPops):
