@@ -1330,7 +1330,9 @@ class Atmosphere:
 
     def quadrature(self, Nrays: Optional[int]=None,
                    mu: Optional[Sequence[float]]=None,
-                   wmu: Optional[Sequence[float]]=None):
+                   wmu: Optional[Sequence[float]]=None,
+                   including: Optional[Sequence[float]]=None,
+                   ):
         '''
         Compute the angular quadrature for solving the RTE and Kinetic
         Equilibrium in a given atmosphere.
@@ -1380,6 +1382,8 @@ class Atmosphere:
             of rays and the z axis, only used in 1D.
         wmu : sequence of float, optional
             The integration weights for each mu, must be provided if mu is provided.
+        including : sequence of float, optional
+            Additional rays to include, implemented with zero weights. Useful for final viewing angles.
 
         Raises
         ------
@@ -1395,8 +1399,17 @@ class Atmosphere:
                     x = mid + halfWidth * x
                     w *= halfWidth
 
-                    self.muz = np.ascontiguousarray(np.array([-x,x]).T)
-                    self.wmu = np.ascontiguousarray(np.array([w,w]).T)
+                    muz = np.array([-x,x]).T
+                    wmu = np.array([w,w]).T
+
+                    if including is not None:
+                        toAdd = np.ones((len(including),2)) * - 1.1
+                        toAdd[:,1] = including
+                        muz = np.append(muz,toAdd, axis = 0)
+                        wmu = np.append(wmu,np.zeros_like(toAdd), axis = 0)
+                    
+                    self.muz = np.ascontiguousarray(muz)
+                    self.wmu = np.ascontiguousarray(wmu)
                     
                 else:
                     raise ValueError('Unsupported Nrays=%d' % Nrays)
@@ -1410,9 +1423,19 @@ class Atmosphere:
                 if len(mu) != len(wmu):
                     raise ValueError('mu and wmu must be the same shape')
                 
-                self.muz = np.ascontiguousarray(np.array([-mu,mu]).T)
-                self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
+                muz = np.array([-mu,mu]).T
+                wmu = np.array([wmu,wmu]).T
 
+                if including is not None:
+                    toAdd = np.ones((len(including),2)) * - 1.1
+                    toAdd[:,1] = including
+                    muz = np.append(muz,toAdd, axis = 0)
+                    wmu = np.append(wmu,np.zeros_like(toAdd), axis = 0)
+                
+                self.muz = np.ascontiguousarray(muz)
+                self.wmu = np.ascontiguousarray(wmu)
+
+            
             self.muy = np.zeros_like(self.muz)
             self.mux = np.sqrt(1.0 - self.muz**2)
             self.mux[:,0] *= -1
@@ -1434,22 +1457,41 @@ class Atmosphere:
                 # x = sin theta cos chi
                 # y = sin theta sin chi
                 # z = cos theta
+                
                 self.mux = np.zeros([Nrays,2])
                 self.mux[:Nrays // 2,1] = np.sin(theta) * np.cos(chi)
                 self.mux[Nrays // 2:,1] = -np.sin(theta) * np.cos(chi)
                 self.mux[:,0] = -self.mux[:,1]
                 self.mux = np.ascontiguousarray(self.mux)
+                
                 self.muz = np.zeros([Nrays,2])
                 self.muz[:,0] = -np.tile(np.cos(theta),2)
                 self.muz[:,1] = np.tile(np.cos(theta),2)
                 self.muz = np.ascontiguousarray(self.muz)
+                
                 self.wmu = np.zeros([Nrays,2])
                 self.wmu[:Nrays // 2,1] = quad[:, 0]
                 self.wmu[Nrays // 2:,1] = quad[:, 0]
                 self.wmu[:,1] /= np.sum(self.wmu[:,1])
                 self.wmu[:,0] = self.wmu[:,1]
-                self.muy = np.sqrt(1.0 - (self.mux**2 + self.muz**2))
+
+                if including is not None:
+                    toAdd = np.ones((len(including),2)) * - 1.1
+                    toAdd[:,1] = np.sqrt(1-np.array(including)**2)
+                    self.mux = np.insert(self.mux, self.mux.shape[0]//2, toAdd, axis = 0)
+                    toAdd[:,1] = np.array(including)
+                    self.muz = np.insert(self.muz, self.muz.shape[0]//2, toAdd, axis = 0)
+                    self.wmu = np.insert(self.wmu, self.wmu.shape[0]//2, toAdd*0, axis = 0)
+
+                self.muy = np.ones_like(self.mux)*1.1
+                self.muy[abs(self.muz)<1.1] = np.sqrt(1.0 - (self.mux[abs(self.mux)<1.1]**2 + self.muz[abs(self.muz)<1.1]**2))
                 self.muy = np.ascontiguousarray(self.muy)
+
+                # if including is not None:
+                #     toAdd = np.ones((len(including),2)) * - 1.1
+                #     toAdd[:,1] = including
+                #     self.muz = np.append(self.muz,toAdd, axis = 0)
+                #     wmu = np.append(w,np.zeros_like(toAdd), axis = 0)
 
             else:
                 raise NotImplementedError()
@@ -1563,7 +1605,7 @@ class Atmosphere:
                 self.muy = np.ascontiguousarray(np.array([muy,muy]).T)
                 self.wmu = np.ascontiguousarray(np.array([wmu,wmu]).T)
 
-                if not np.allclose(self.muz**2 + self.mux**2 + self.muy**2, 1):
+                if not np.allclose(self.muz[abs(self.muz)<1.]**2 + self.mux[abs(self.mux)<1.]**2 + self.muy[abs(self.muy)<1.]**2, 1):
                     raise ValueError('mux**2 + muy**2 + muz**2 != 1.0')
                 
             if None in self.wmu:
