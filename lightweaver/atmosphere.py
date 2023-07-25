@@ -1622,9 +1622,9 @@ class Atmosphere:
 
             #Will definitely need to rethink this once 3D becomes a thing
             top_left = (muz<0) & (mux<0)
-            top_right = (muz>0) & (mux>0)
-            bottom_left = (muz<0) & (mux>0)
-            bottom_right = (muz>0) & (mux<0)
+            top_right = (muz>=0) & (mux>=0)
+            bottom_left = (muz<0) & (mux>=0)
+            bottom_right = (muz>=0) & (mux<0)
 
             lengths = np.array([muz[top_left].shape[0],muz[top_right].shape[0]])
             lengthdiff = abs(lengths-lengths.max())
@@ -1727,13 +1727,13 @@ class Atmosphere:
         # print('zUpperBc: ', self.zUpperBc.indexVector)
 
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
-        mux = self.mux[self.mux>0]
-        muy = self.muy[self.mux>0]
-        muz = self.muz[self.mux>0]
+        mux = self.mux[self.mux>=0]
+        muy = self.muy[self.mux>=0]
+        muz = self.muz[self.mux>=0]
         # mux[abs(mux)>1] = 0.
         # muy[abs(muy)>1] = 0.
         # muz[abs(muz)>1] = 0.
-        indexVector[self.mux>0] = np.where(self.mux>0)[0]
+        indexVector[self.mux>=0] = np.where(self.mux>=0)[0]
 
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
         
