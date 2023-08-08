@@ -25,6 +25,8 @@ struct Ray
 // These rely on proper IEEE754 nan/inf handling
 f64 x_plane_intersection(f64 offset, const Ray& ray)
 {
+    // calculates the hypotenuse of the ray travelling at a given mu angle
+    // that is the distance necessary to reach a x plane
     f64 t = -(ray.ox - offset) / (ray.mux);
     return t;
 }
@@ -32,6 +34,8 @@ f64 x_plane_intersection(f64 offset, const Ray& ray)
 // parametrised intersection (t) with a plane of constant z
 f64 z_plane_intersection(f64 offset, const Ray& ray)
 {
+    // calculates the hypotenuse of the ray travelling at a given mu angle
+    // that is the distance necessary to reach a z plane
     f64 t = -(ray.oz - offset) / (ray.muz);
     return t;
 }
@@ -79,20 +83,101 @@ IntersectionResult dw_intersection_2d(const IntersectionData& grid, int zp, int 
     f64 tx = x_plane_intersection(grid.x(xp + grid.xStep), ray);
     f64 tz = z_plane_intersection(grid.z(zp + grid.zStep), ray);
 
-    if (abs(tx) < abs(tz))
+    if (xp == grid.xStart && zp == grid.zStart)
     {
+        // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
+        if (abs(grid.muz) <= 0.25)
+        {
+            printf(".............................................\n");
+            printf("mux,muz,toObs: %f %f %d\n", grid.mux, grid.muz, grid.toObs);
+            printf("tx, tz       : %f %f\n", tx, tz);
+        }
+    }
+
+
+    // if mux == 0 (vertical ray), tx == inf
+    // therefore tz < tx
+    // if muz == 0 (horizontal ray), tz == inf
+    // therefore tx < tz
+
+    // if (grid.muz == 0) //hardwire the horizontal ray behaviour
+    // {
+    //     f64 fracX = xp + grid.xStep;
+    //     f64 fracZ = zp;
+    //     if (xp == grid.xStart && zp == grid.zStart)
+    //     {
+    //         if (abs(grid.mux) <= 0.2 || abs(grid.muz) <= 0.2)
+    //         {
+    //             printf("xp, zp       : %d %d\n", xp, zp);
+    //             printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
+    //             printf("fracX, fracZ : %f %f\n", fracX, fracZ);
+    //         }
+    //     }
+    //     return IntersectionResult(InterpolationAxis::Z, fracZ, fracX, tx);
+    // }
+    // else 
+    if (abs(tx) < abs(tz)) //more horizontal ray
+    {
+        // if (xp == grid.xStart && zp == grid.zStart)
+        // {
+        //     if (grid.mux == 0 || grid.muz == 0)
+        //     {
+        //         printf(".............................................\n");
+        //         printf("tx < tz triggered");
+        //     }
+        // }
         f64 fracX = xp + grid.xStep;
         f64 fracZ = zp + grid.zStep * (tx / tz);
-        return IntersectionResult(InterpolationAxis::Z, fracZ, fracX, tx);
+
+        if (xp == grid.xStart && zp == grid.zStart)
+        {
+            // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
+            if (abs(grid.muz) <= 0.25)
+            {
+                printf("plane of constant x intersected first\n");
+                printf("xp, zp       : %d %d\n", xp, zp);
+                printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
+                printf("fracX, fracZ : %f %f\n", fracX, fracZ);
+            }
+        } //interpolation axis is Z as interpolation occurs along that axis which deliniates two adjacent cells in the x direction
+        return IntersectionResult(InterpolationAxis::Z, fracZ, fracX, tx); 
     }
-    else if (abs(tz) < abs(tx))
+    else if (abs(tz) < abs(tx)) //more vertical ray
     {
+        // if (xp == grid.xStart && zp == grid.zStart)
+        // {
+        //     if (grid.mux == 0 || grid.muz == 0)
+        //     {
+        //         printf(".............................................\n");
+        //         printf("tz < tx triggered");
+        //     }
+        // }
         f64 fracZ = zp + grid.zStep;
         f64 fracX = xp + grid.xStep * (tz / tx);
+
+        if (xp == grid.xStart && zp == grid.zStart)
+        {
+            // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
+            if (abs(grid.muz) <= 0.25)
+            {
+                printf("plane of constant z intersected first\n");
+                printf("xp, zp       : %d %d\n", xp, zp);
+                printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
+                printf("fracX, fracZ : %f %f\n", fracX, fracZ);
+            }
+        }//interpolation axis is X as interpolation occurs along that axis which deliniates two adjacent cells in the z direction
         return IntersectionResult(InterpolationAxis::X, fracZ, fracX, tz);
     }
     else
     {
+        // if (xp == grid.xStart && zp == grid.zStart)
+        // {
+        //     if (grid.mux == 0 || grid.muz == 0)
+        //     {
+        //         printf(".............................................\n");
+        //         printf("else triggered");
+        //     }
+        // }
         f64 fracX = xp + grid.xStep;
         f64 fracZ = zp + grid.zStep;
         return IntersectionResult(InterpolationAxis::None, fracZ, fracX, tx);
@@ -121,6 +206,13 @@ IntersectionResult uw_intersection_2d(const IntersectionData& grid, int zp, int 
     f64 tx = x_plane_intersection(grid.x(xp - grid.xStep), ray);
     f64 tz = z_plane_intersection(grid.z(zp - grid.zStep), ray);
 
+    // if (grid.muz == 0)
+    // {
+    //     f64 fracX = xp - grid.xStep;
+    //     f64 fracZ = zp;
+    //     return IntersectionResult(InterpolationAxis::Z, fracZ, fracX, tx);
+    // }
+    // else 
     if (abs(tx) < abs(tz))
     {
         f64 fracX = xp - grid.xStep;
@@ -645,7 +737,7 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
             // auto uwIntersection = uw_intersection_2d(gridData, j, k);
             int longCharIdx = intersections(mu, (int)toObs, k, j).longCharIdx;
             auto uwIntersection = intersections(mu, (int)toObs, k, j).uwIntersection;
-            if (longCharIdx < 0)
+            if (longCharIdx < 0) //If at the edge of the domain, wrap around
             {
                 f64 chiUw = interp_param(gridData, uwIntersection, chi);
                 f64 dtau = 0.5 * (chiUw + chi(k, j)) * abs(uwIntersection.distance);
@@ -660,7 +752,7 @@ void piecewise_linear_2d(FormalData* fd, int la, int mu, bool toObs, const F64Vi
                 if (computeOperator)
                     Psi(k, j) = w[0] - w[1] / dtau;
             }
-            else
+            else //accumulate the necessary information along the ray segments i.e., ray substeps
             {
                 auto& substeps = atmos->intersections.substeps[longCharIdx];
                 f64 Iuw = interp_param(gridData, substeps.steps[0], I);
@@ -1227,11 +1319,11 @@ void build_intersection_list(Atmosphere* atmos)
             f64 muz = atmos->muz(mu, toObsI);
             f64 mux = atmos->mux(mu, toObsI);
 
-            // NOTE(cmo): As always, assume toObs
+            // NOTE(cmo): As always, assume toObs i.e., toObsI = 1
             int dk = -1;
             int kStart = atmos->Nz - 1;
             int kEnd = 0;
-            if (!toObs)
+            if (!toObs) // toObsI = 0
             {
                 dk = 1;
                 kStart = 0;
@@ -1249,7 +1341,11 @@ void build_intersection_list(Atmosphere* atmos)
                 jStart = jEnd;
                 jEnd = 0;
             }
-
+            // if (abs(mux) <= 0.25 || abs(muz) <= 0.25)
+            if (abs(muz) <= 0.25)
+            {
+                printf("%d %d %d %d\n", mu, toObsI, jStart, kStart);
+            }
             IntersectionData gridData {atmos->x,
                                     atmos->z,
                                     mux,
@@ -1298,6 +1394,7 @@ void build_intersection_list(Atmosphere* atmos)
                         longCharIdx = atmos->intersections.substeps.size() - 1;
 
                         auto locToUpwind = uw;
+                        int itCount = 0;
                         while (true)
                         {
                             auto uuw = uw_intersection_2d_frac_x(gridData, locToUpwind);
@@ -1314,6 +1411,7 @@ void build_intersection_list(Atmosphere* atmos)
                                 break;
                             }
                             locToUpwind = uuw;
+                            itCount  += 1;
                         }
                     }
                     IntersectionResult dw;

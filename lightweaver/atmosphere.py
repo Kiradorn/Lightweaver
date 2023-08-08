@@ -1727,13 +1727,13 @@ class Atmosphere:
         # print('zUpperBc: ', self.zUpperBc.indexVector)
 
         indexVector = np.ones((muxShape, 2), dtype=np.int32) * -1
-        mux = self.mux[self.mux>=0]
-        muy = self.muy[self.mux>=0]
-        muz = self.muz[self.mux>=0]
+        mux = self.mux[self.mux>0]
+        muy = self.muy[self.mux>0]
+        muz = self.muz[self.mux>0]
         # mux[abs(mux)>1] = 0.
         # muy[abs(muy)>1] = 0.
         # muz[abs(muz)>1] = 0.
-        indexVector[self.mux>=0] = np.where(self.mux>=0)[0]
+        indexVector[self.mux>0] = np.where(self.mux>0)[0]
 
         self.xLowerBc.set_required_angles(mux, muy, muz, indexVector)
         

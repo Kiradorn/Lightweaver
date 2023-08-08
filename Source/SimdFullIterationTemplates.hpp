@@ -393,6 +393,13 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                     assert(false);
             }
             
+            if constexpr (StoreDepthData)
+            {
+                auto& depth = *data.depthData;
+                memcpy(&depth.I(la, mu, toObsI, 0),
+                        I.data, Nspace * sizeof(f64));
+            }
+
             if (atmos.wmu(mu, toObsI) == 0)
                 continue;
             
@@ -463,12 +470,6 @@ f64 intensity_core_opt(IntensityCoreData& data, int la, FsMode mode, ExtraParams
                                                                        wmu, &data);
                     }
                 }
-            }
-            if constexpr (StoreDepthData)
-            {
-                auto& depth = *data.depthData;
-                memcpy(&depth.I(la, mu, toObsI, 0),
-                        I.data, Nspace * sizeof(f64));
             }
         }
     }

@@ -172,21 +172,21 @@ def iterate_ctx_se(ctx: 'Context', Nscatter: int=3, NmaxIter: int=2000,
     conv = convergence(ctx, JTol, popsTol, rhoTol)
 
     for it in range(NmaxIter):
-        if oscillateQuadrature:
-            if (it >= oscillateStart and not it % oscillateFrequency) or (it < Nscatter and not it % oscillateFrequency):
-                log.info('Swapping Quadrature')
+        # if oscillateQuadrature:
+        #     if (it >= oscillateStart and not it % oscillateFrequency) or (it < Nscatter and not it % oscillateFrequency):
+        #         log.info('Swapping Quadrature')
 
-                atmosphereFlippedMus = deepcopy(ctx.atmos.pyAtmos)
-                atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
-                atmosphereFlippedMus.muy = -np.flip(ctx.atmos.pyAtmos.muy, axis=1)
-                atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
-                atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
+        #         atmosphereFlippedMus = deepcopy(ctx.atmos.pyAtmos)
+        #         atmosphereFlippedMus.mux = -np.flip(ctx.atmos.pyAtmos.mux, axis=1)
+        #         atmosphereFlippedMus.muy = -np.flip(ctx.atmos.pyAtmos.muy, axis=1)
+        #         atmosphereFlippedMus.muz = -np.flip(ctx.atmos.pyAtmos.muz, axis=1)
+        #         atmosphereFlippedMus.wmu = np.ascontiguousarray(np.flip(ctx.atmos.pyAtmos.wmu, axis=1))
                 
-                atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
+        #         atmosphereFlippedMus.configure_bcs() #I don't think this is technically necessary since I flip the mu arrays, so the indexing is the same. But I guess this is more complete
 
-                ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
+        #         ctx.update_quadrature(atmosphereFlippedMus, ctx.spect)
 
-                log.info('Quadrature Updated')
+        #         log.info('Quadrature Updated')
         
         if (not quiet and
             (alwaysPrint or ((now := time.time()) >= prevPrint + printInterval))):
