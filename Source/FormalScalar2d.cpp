@@ -83,16 +83,16 @@ IntersectionResult dw_intersection_2d(const IntersectionData& grid, int zp, int 
     f64 tx = x_plane_intersection(grid.x(xp + grid.xStep), ray);
     f64 tz = z_plane_intersection(grid.z(zp + grid.zStep), ray);
 
-    if (xp == grid.xStart && zp == grid.zStart)
-    {
-        // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
-        if (abs(grid.muz) <= 0.25)
-        {
-            printf(".............................................\n");
-            printf("mux,muz,toObs: %f %f %d\n", grid.mux, grid.muz, grid.toObs);
-            printf("tx, tz       : %f %f\n", tx, tz);
-        }
-    }
+    // if (xp == grid.xStart && zp == grid.zStart)
+    // {
+    //     // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
+    //     if (abs(grid.muz) <= 0.25)
+    //     {
+    //         printf(".............................................\n");
+    //         printf("mux,muz,toObs: %f %f %d\n", grid.mux, grid.muz, grid.toObs);
+    //         printf("tx, tz       : %f %f\n", tx, tz);
+    //     }
+    // }
 
 
     // if mux == 0 (vertical ray), tx == inf
@@ -129,17 +129,17 @@ IntersectionResult dw_intersection_2d(const IntersectionData& grid, int zp, int 
         f64 fracX = xp + grid.xStep;
         f64 fracZ = zp + grid.zStep * (tx / tz);
 
-        if (xp == grid.xStart && zp == grid.zStart)
-        {
-            // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
-            if (abs(grid.muz) <= 0.25)
-            {
-                printf("plane of constant x intersected first\n");
-                printf("xp, zp       : %d %d\n", xp, zp);
-                printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
-                printf("fracX, fracZ : %f %f\n", fracX, fracZ);
-            }
-        } //interpolation axis is Z as interpolation occurs along that axis which deliniates two adjacent cells in the x direction
+        // if (xp == grid.xStart && zp == grid.zStart)
+        // {
+        //     // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
+        //     if (abs(grid.muz) <= 0.25)
+        //     {
+        //         printf("plane of constant x intersected first\n");
+        //         printf("xp, zp       : %d %d\n", xp, zp);
+        //         printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
+        //         printf("fracX, fracZ : %f %f\n", fracX, fracZ);
+        //     }
+        // } //interpolation axis is Z as interpolation occurs along that axis which deliniates two adjacent cells in the x direction
         return IntersectionResult(InterpolationAxis::Z, fracZ, fracX, tx); 
     }
     else if (abs(tz) < abs(tx)) //more vertical ray
@@ -155,17 +155,17 @@ IntersectionResult dw_intersection_2d(const IntersectionData& grid, int zp, int 
         f64 fracZ = zp + grid.zStep;
         f64 fracX = xp + grid.xStep * (tz / tx);
 
-        if (xp == grid.xStart && zp == grid.zStart)
-        {
-            // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
-            if (abs(grid.muz) <= 0.25)
-            {
-                printf("plane of constant z intersected first\n");
-                printf("xp, zp       : %d %d\n", xp, zp);
-                printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
-                printf("fracX, fracZ : %f %f\n", fracX, fracZ);
-            }
-        }//interpolation axis is X as interpolation occurs along that axis which deliniates two adjacent cells in the z direction
+        // if (xp == grid.xStart && zp == grid.zStart)
+        // {
+        //     // if (abs(grid.mux) <= 0.25 || abs(grid.muz) <= 0.25)
+        //     if (abs(grid.muz) <= 0.25)
+        //     {
+        //         printf("plane of constant z intersected first\n");
+        //         printf("xp, zp       : %d %d\n", xp, zp);
+        //         printf("xStep, zStep : %d %d\n", grid.xStep, grid.zStep);
+        //         printf("fracX, fracZ : %f %f\n", fracX, fracZ);
+        //     }
+        // }//interpolation axis is X as interpolation occurs along that axis which deliniates two adjacent cells in the z direction
         return IntersectionResult(InterpolationAxis::X, fracZ, fracX, tz);
     }
     else
@@ -1341,11 +1341,11 @@ void build_intersection_list(Atmosphere* atmos)
                 jStart = jEnd;
                 jEnd = 0;
             }
-            // if (abs(mux) <= 0.25 || abs(muz) <= 0.25)
-            if (abs(muz) <= 0.25)
-            {
-                printf("%d %d %d %d\n", mu, toObsI, jStart, kStart);
-            }
+            // // if (abs(mux) <= 0.25 || abs(muz) <= 0.25)
+            // if (abs(muz) <= 0.25)
+            // {
+            //     printf("%d %d %d %d\n", mu, toObsI, jStart, kStart);
+            // }
             IntersectionData gridData {atmos->x,
                                     atmos->z,
                                     mux,
